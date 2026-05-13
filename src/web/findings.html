@@ -1,0 +1,1105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>attention — notes from the prefill floor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #ffffff;
+    --ink:       #111111;
+    --ink-soft:  #444444;
+    --muted:     #888888;
+    --rule:      #dddddd;
+    --rule-soft: #eeeeee;
+    --link:      #2563eb;
+    --accent:    #16a34a;
+    --code-bg:   #f4f4f4;
+
+    /* data palette — tailwind 600s, distinguishable on white */
+    --d1: #2563eb; /* blue */
+    --d2: #dc2626; /* red */
+    --d3: #16a34a; /* green */
+    --d4: #d97706; /* amber */
+    --d5: #7c3aed; /* violet */
+    --d6: #0891b2; /* cyan */
+    --d7: #db2777; /* pink */
+    --d8: #4b5563; /* slate */
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: "Space Mono", ui-monospace, monospace;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* —————————————————————————————————————————— masthead */
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 2rem;
+  }
+  .wordmark {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .tagline {
+    color: var(--muted);
+    font-size: 0.8rem;
+    flex: 1;
+    min-width: 0;
+  }
+  .nav {
+    display: flex;
+    gap: 0.85rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .nav a { color: var(--muted); }
+  .nav a:hover { color: var(--ink); text-decoration: none; }
+  .nav a.active { color: var(--ink); font-weight: 700; }
+
+  /* —————————————————————————————————————————— article head */
+  .article-head { margin-bottom: 2rem; }
+  .article-head .title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--ink);
+  }
+  .article-head .dek { margin-bottom: 1rem; }
+  .article-head .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--rule-soft);
+  }
+  .article-head .meta dt {
+    display: inline;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    margin-right: 0.4rem;
+  }
+  .article-head .meta dd { display: inline; margin-right: 0.5rem; }
+
+  /* —————————————————————————————————————————— TOC */
+  .toc {
+    margin: 0 0 2.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .toc-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.75rem;
+    color: var(--ink);
+  }
+  .toc ol {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem 1.5rem;
+    counter-reset: toc;
+  }
+  .toc li {
+    counter-increment: toc;
+    font-size: inherit;
+  }
+  .toc li::before {
+    content: '§' counter(toc) '. ';
+    color: var(--muted);
+    margin-right: 0.25rem;
+  }
+  .toc a { color: var(--ink); }
+  .toc a:hover { color: var(--link); text-decoration: none; }
+
+  /* —————————————————————————————————————————— prose */
+  section { margin-bottom: 2.5rem; }
+
+  h2 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.5rem;
+  }
+  h2 .num { color: var(--muted); margin-right: 0.5rem; }
+  .lede { color: var(--muted); margin-bottom: 1rem; }
+
+  h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--ink);
+  }
+
+  p { margin-bottom: 1rem; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+
+  code {
+    font-family: inherit;
+    font-size: 0.95em;
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  ul {
+    padding-left: 1.5rem;
+    margin: 0 0 1rem;
+    list-style: none;
+  }
+  ul li { margin-bottom: 0.5rem; position: relative; }
+  ul li::before {
+    content: '*';
+    position: absolute;
+    left: -1.25rem;
+    color: var(--muted);
+  }
+
+  blockquote {
+    margin: 1.5rem 0;
+    padding: 0.5rem 0 0.5rem 1rem;
+    border-left: 2px solid var(--rule);
+    color: var(--ink);
+  }
+
+  sup { font-size: 0.7em; color: var(--link); }
+
+  /* —————————————————————————————————————————— tables */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0 1.5rem;
+    font-size: 0.8rem;
+  }
+  th, td {
+    text-align: right;
+    padding: 0.45rem 0.7rem 0.45rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  thead th {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.45rem;
+  }
+  th:first-child, td:first-child {
+    text-align: left;
+    padding-right: 1rem;
+    white-space: nowrap;
+  }
+  table caption {
+    text-align: left;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.25rem;
+  }
+  table caption .tab { color: var(--ink); font-weight: 700; margin-right: 0.6rem; }
+  tbody tr:hover td { background: var(--code-bg); }
+  td.hi { color: var(--accent); font-weight: 700; }
+  td.dim { color: var(--muted); }
+  .swatch {
+    display: inline-block;
+    width: 0.65em;
+    height: 0.65em;
+    background: currentColor;
+    margin-right: 0.55em;
+    vertical-align: -1px;
+  }
+
+  /* —————————————————————————————————————————— figures */
+  .data-fig {
+    margin: 1.5rem 0 2rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .figcap-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: baseline;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule-soft);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .figcap-inline .fig-num { color: var(--muted); }
+  .figcap-inline .fig-title { color: var(--ink); font-weight: 700; flex: 1; min-width: 0; }
+  .figcap-inline .fig-meta { color: var(--muted); text-align: right; }
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .fig-caption {
+    color: var(--ink);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-top: 0.75rem;
+  }
+
+  /* —————————————————————————————————————————— hypothesis */
+  .hypothesis {
+    border-top: 1px solid var(--rule-soft);
+    padding: 1rem 0;
+  }
+  .hypothesis h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.6rem;
+  }
+  .hypothesis h4 .h-num { color: var(--muted); margin-right: 0.5rem; }
+  .hypothesis .falsify { color: var(--ink); margin-top: 0.6rem; }
+  .hypothesis .falsify::before {
+    content: 'falsify — ';
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    font-size: 0.75rem;
+  }
+
+  /* —————————————————————————————————————————— colophon */
+  .colophon {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  /* —————————————————————————————————————————— responsive */
+  @media (max-width: 600px) {
+    body { padding: 2rem 1rem 3rem; }
+    .toc ol { grid-template-columns: 1fr; }
+    .article-head .title { font-size: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="masthead">
+    <a href="/" class="wordmark">attention</a>
+    <span class="tagline">llm prefill scaling observatory — findings &amp; field notes</span>
+    <nav class="nav">
+      <a href="/">viewer</a>
+      <a href="/findings" class="active">findings</a>
+      <a href="/research">research</a>
+      <a href="/expert_research">expert</a>
+    </nav>
+  </header>
+
+  <section class="article-head">
+    <div class="title">Notes from the prefill floor</div>
+    <p class="dek">
+      We measured time-to-first-token across seven frontier-tier models from one second to one
+      million characters of context. Nothing scales like dense attention. Several curves carry
+      reproducible humps at characteristic context sizes. A few models accelerate where they
+      should slow down. Here is what the curves look like, where they bend, and the most
+      honest set of guesses we have for why.
+    </p>
+    <dl class="meta">
+      <dt>Filed</dt><dd>2026-05-12</dd>
+      <dt>Dataset</dt><dd>n ≈ 1,200 calls · 7 models · 3 prompt shapes · max_tokens = 100</dd>
+      <dt>Fit on</dt><dd><code>min(first_content_delta_ms)</code> per cell</dd>
+    </dl>
+  </section>
+
+  <nav class="toc" aria-label="contents">
+    <div class="toc-label">Contents</div>
+    <ol>
+      <li><a href="#method">Method, briefly</a></li>
+      <li><a href="#shapes">The shape of the curves</a></li>
+      <li><a href="#breaks">Humps, not staircases</a></li>
+      <li><a href="#tiers">What can produce a hump</a></li>
+      <li><a href="#decode-dip">A strange decode dip</a></li>
+      <li><a href="#caveats">What this is not</a></li>
+    </ol>
+  </nav>
+
+  <section id="method">
+    <h2><span class="num">§1</span>Method, briefly</h2>
+    <p>
+      The conceit of this project is small: if a closed model serves a million-token request
+      in roughly the time it serves a thousand-token one, the people running it are doing
+      <em>something</em> other than dense quadratic attention. We cannot peer into their
+      serving stack, but we can curl their endpoint, ten thousand times, and let the wall
+      clock tell us about the parts they were too modest to advertise.
+    </p>
+    <p>
+      We sweep input length on a roughly geometric grid from <code>~250</code> chars to
+      <code>~1 M</code> chars across three prompt shapes — <code>song-toads</code>
+      (filler text), <code>random</code> (high-entropy tokens), and <code>needle-p50</code>
+      (a discriminative fact at the prompt midpoint). Trial order is randomised across
+      <em>(model, size, repeat)</em>; requests are issued strictly sequentially, one in
+      flight at a time. Output is capped at <code>max_tokens = 100</code>, sampling at
+      <code>temperature = 0</code>, all caching opted out, all reasoning budgets explicitly
+      zeroed.
+    </p>
+    <p>
+      We report TTFT as the per-cell minimum, not the mean. A serving stack's 10th-percentile
+      latency at a fixed input length is the closest thing we can observe to its compute
+      floor. Means and tails are dominated by queueing, batching pile-ups, and provider-side
+      noise that have nothing to do with the question we came here to ask.
+    </p>
+    <p>
+      One important caveat carries through everything below: <em>token counts are not
+      comparable across providers</em>. Each provider tokenises its own way, so when we
+      say "<code>~100 k input tokens</code>" on Gemini and the same on OpenAI we mean
+      two different prompts. Within a single <em>(provider, model)</em>, the comparison
+      is honest. Across them, prefer the byte-count axis.
+    </p>
+  </section>
+
+  <section id="shapes">
+    <h2><span class="num">§2</span>The shape of the curves</h2>
+    <p class="lede">Sub-linear is the rule, not the exception. Nothing fits dense.</p>
+
+    <p>
+      Before looking at any model in particular, the first thing to do is to fit a power
+      law to the latency floor and read off the exponent. If TTFT scales as
+      <code>C · n^α</code> with input size <code>n</code>, then the exponent
+      <code>α</code> is the rough character of the prefill. Dense O(n²) attention asks
+      for <code>α ≈ 1.0</code> at large <code>n</code>. What we see is uniformly smaller
+      than that — in some cases dramatically so.
+    </p>
+
+    <table>
+      <caption><span class="tab">tab. 1</span>Fitted scaling exponent of <code>min TTFT</code>, by model and regime.</caption>
+      <thead>
+        <tr><th>model</th><th>α (all data)</th><th>α (≥ 10 k tok)</th><th>regime</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>0.15</td><td class="hi">0.29</td><td class="dim">remarkably flat</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d8)"></span>claude-haiku-4-5</td><td>0.19</td><td>0.58</td><td class="dim">smooth, sub-linear</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>0.28</td><td>0.69</td><td class="dim">smooth, sub-linear</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d5)"></span>gemini-2.5-flash</td><td>0.34</td><td>0.70</td><td class="dim">smooth, sub-linear</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d4)"></span>gemini-3-flash-preview</td><td>0.31</td><td>0.73</td><td class="dim">sub-linear, late break</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d7)"></span>gpt-4o-mini</td><td>0.34</td><td>0.84</td><td class="dim">step-laden</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d2)"></span>gpt-4.1-nano</td><td>0.40</td><td class="hi">1.02</td><td class="dim">linear-or-worse at top end</td></tr>
+      </tbody>
+    </table>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 1</span>
+        <span class="fig-title">TTFT floor vs context — all seven models</span>
+        <span class="fig-meta">log-log · min over repeats</span>
+      </figcaption>
+      <svg class="chart" data-chart="ttft" aria-label="TTFT scaling chart"></svg>
+      <p class="fig-caption">
+        Each line is the per-cell minimum of <code>first_content_delta_ms</code> across
+        prompt shapes for that <em>(model, input-size)</em> bin. The fan opens on the right:
+        <em>gemini-3.1-flash-lite</em> stays under <code>5 s</code> at <code>~870 k</code>
+        input tokens; <em>gpt-4.1-nano</em> exceeds <code>23 s</code> at half that context.
+        None of the seven curves bends like a quadratic.
+      </p>
+    </figure>
+
+    <p>
+      The headline is the spread: at the high-context end, the fastest scaler is roughly
+      <strong>3.5×</strong> better than the slowest. Gemini 3.1 Flash Lite walks
+      <code>~204</code> tokens to <code>~866 k</code> tokens — a factor of 4,200 in context
+      — for only <code>726 ms → 5,027 ms</code> on the floor. That is a factor of seven in
+      wall time across four orders of magnitude in context. It is hard to call that
+      attention.
+    </p>
+
+    <blockquote>
+      Lite walks four thousand times more context for seven times more wall time. Whatever
+      it is doing in there, it is not multiplying every token against every other token.
+    </blockquote>
+
+    <p>
+      At the other end, GPT-4.1 nano <em>random</em>, restricted to its actual top-end
+      range of <code>~78 k → ~611 k</code> tokens, fits to <code>α ≈ 1.16</code>. That is
+      superlinear — consistent with a regime where prefill cost has shifted from being
+      dominated by some sub-quadratic prefix kernel into a regime where the per-token
+      cost is itself growing with context. Whether that is dense attention belatedly
+      showing up, or simply a routing change into a slower backend, is the question §4
+      is going to fail to answer.
+    </p>
+
+    <h3>The four anchor points</h3>
+    <p>The fits are easier to feel as concrete pairs:</p>
+
+    <table>
+      <caption><span class="tab">tab. 2</span>Floor of <code>first_content_delta_ms</code> at the small &amp; large ends of each model's observed range.</caption>
+      <thead>
+        <tr><th>model</th><th>small · tok</th><th>ms</th><th>large · tok</th><th>ms</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>204</td><td>726</td><td>866 k</td><td class="hi">5,027</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d4)"></span>gemini-3-flash-preview</td><td>206</td><td>492</td><td>867 k</td><td>20,657</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d5)"></span>gemini-2.5-flash</td><td>200</td><td>289</td><td>867 k</td><td>14,059</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d2)"></span>gpt-4.1-nano</td><td>155</td><td>261</td><td>611 k</td><td>23,247</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>67</td><td>296</td><td>251 k</td><td>2,044</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d8)"></span>claude-haiku-4-5</td><td>79</td><td>408</td><td>154 k</td><td>2,482</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d7)"></span>gpt-4o-mini</td><td>148</td><td>258</td><td>92 k</td><td>4,706</td></tr>
+      </tbody>
+    </table>
+
+    <p>
+      The other thing the per-cell floors do, once you look closely, is move
+      <em>non-monotonically</em>. Several models pop above their own trend at a specific
+      context size and then settle back down at the next bucket. That pattern is the
+      next section.
+    </p>
+  </section>
+
+  <section id="breaks">
+    <h2><span class="num">§3</span>Humps, not staircases</h2>
+    <p class="lede">TTFT does not rise as a clean staircase. It rises with humps — local elevations at characteristic context sizes that resolve at the next bucket up.</p>
+
+    <p>
+      Stare at the per-cell averages long enough and the eye picks up something the
+      power-law fits in §2 quietly average over: at certain context sizes, TTFT
+      <em>spikes above its own trend</em>, then falls back to (or below) the trend at
+      the next geometric bucket. The cleanest example is
+      <strong>gemini-3.1-flash-lite</strong> on the <code>song-toads</code> prompt at
+      9 reps per cell: mean TTFT walks <code>1,675 → 2,266 → 1,201 ms</code> across
+      <code>62 k → 97 k → 144 k</code> input tokens. The middle cell is 35 % above
+      its right-hand neighbour, and the next cell up is 47 % <em>below</em> the peak.
+      That is a hump.
+    </p>
+
+    <table>
+      <caption><span class="tab">tab. 3</span>Reproducible humps: cells where mean TTFT &gt; 1.2× the previous bucket and the next bucket falls back &gt; 15%.</caption>
+      <thead>
+        <tr><th>model</th><th>prompt</th><th>peak · tok</th><th>prev → peak → next (mean ms)</th><th>↑×</th><th>↓×</th><th>n</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>song-toads</td><td>97 k</td><td>1,675 → 2,266 → 1,201</td><td>1.35</td><td class="hi">0.53</td><td>9</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d5)"></span>gemini-2.5-flash</td><td>needle-p50</td><td>97 k</td><td>2,259 → 3,744 → 2,924</td><td>1.66</td><td>0.78</td><td>4</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d5)"></span>gemini-2.5-flash</td><td>song-toads</td><td>97 k</td><td>2,495 → 3,445 → 2,689</td><td>1.38</td><td>0.78</td><td>3</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>random</td><td>111 k</td><td>1,376 → 2,018 → 1,635</td><td>1.47</td><td>0.81</td><td>3</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d4)"></span>gemini-3-flash-preview</td><td>random</td><td>28 k</td><td>961 → 2,257 → 1,297</td><td>2.35</td><td class="hi">0.57</td><td>3</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d7)"></span>gpt-4o-mini</td><td>needle-p50</td><td>30 k</td><td>2,840 → 7,465 → 4,992</td><td>2.63</td><td>0.67</td><td>3</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d7)"></span>gpt-4o-mini</td><td>song-toads</td><td>7 k</td><td>849 → 3,213 → 1,953</td><td class="hi">3.78</td><td>0.61</td><td>3</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>needle-p50</td><td>30 k</td><td>908 → 1,188 → 845</td><td>1.31</td><td>0.71</td><td>4</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>song-toads</td><td>3 k</td><td>543 → 1,200 → 481</td><td>2.21</td><td class="hi">0.40</td><td>9</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d2)"></span>gpt-4.1-nano</td><td>needle-p50</td><td>137 k</td><td>2,146 → 3,918 → 3,317</td><td>1.83</td><td>0.85</td><td>4</td></tr>
+      </tbody>
+    </table>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 2</span>
+        <span class="fig-title">humps in the curves — four models, log-log</span>
+        <span class="fig-meta">mean TTFT per cell · shaded bands mark hump regions</span>
+      </figcaption>
+      <svg class="chart" data-chart="humps" aria-label="Non-monotonic TTFT humps across four models"></svg>
+      <p class="fig-caption">
+        Mean TTFT per cell, log-log. The two Gemini lines hump at <code>~100 k</code>
+        input tokens; the two OpenAI lines hump in the <code>~3–30 k</code> band. In
+        every case the next bucket up <em>falls below</em> the elevated cell — proof
+        the elevation is not residual scaling cost. Lite's <code>97 k → 144 k</code>
+        drop is 47 % at <code>n = 9</code> repeats; gpt-5.4-mini's <code>3 k → 7 k</code>
+        drop is 60 % at <code>n = 9</code>. These are not noise.
+      </p>
+    </figure>
+
+    <p>
+      Two patterns stand out across the table. First, <strong>each provider has its
+      own characteristic hump zone</strong>: OpenAI models cluster their humps in the
+      <code>~3–30 k</code> input-token band, while Gemini models cluster theirs at
+      <code>~30–100 k</code>. The pattern shows up in different prompt shapes for
+      the same model — same provider, same model, different prompt content, hump in
+      the same place.
+    </p>
+    <p>
+      Second, the humps are <strong>highly reproducible at high <code>n</code></strong>.
+      The two cells in this table with 9 repeats each — Lite at <code>97 k</code> and
+      gpt-5.4-mini at <code>3 k</code> — are not fluctuating around their reported peak.
+      They are consistently elevated above the cells on either side. That is what makes
+      the hump a feature of the system, not a sampling artifact.
+    </p>
+  </section>
+
+  <section id="tiers">
+    <h2><span class="num">§4</span>What can produce a hump</h2>
+    <p class="lede">Dense attention does not have favourite numbers. The hump is not architecture — it is operations.</p>
+
+    <p>
+      A monotonically rising curve is what dense attention should produce: more context,
+      more compute, more wall time. A <em>hump</em> — context grows, latency rises, then
+      <em>falls again</em> — cannot come from the attention kernel itself. There is no
+      operation in the model that becomes cheaper because the prompt got longer. So the
+      hump has to come from somewhere outside the kernel: from routing, scheduling,
+      caching, or some other piece of the serving stack that flips into a different mode
+      at a particular size.
+    </p>
+
+    <p>The mechanisms that fit the shape:</p>
+    <ul>
+      <li><strong>Routing-tier transition.</strong> The simplest story. Below the
+        threshold, the request goes to the default pool, which was tuned for a different
+        size class and handles it sub-optimally; above the threshold it goes to a
+        long-context pool that is actually faster in absolute terms. The hump is the
+        price you pay for being on the wrong side of the boundary. The <em>drop</em> at
+        the next bucket is the new pool taking over. The fact that OpenAI models cluster
+        their humps near <code>~30 k</code> and Gemini models near <code>~100 k</code> is
+        consistent with each provider drawing the line in a different place.</li>
+      <li><strong>Bimodal handling at a boundary.</strong> Variant of the above: at the
+        boundary, individual requests get routed inconsistently — some hit the fast path,
+        some the slow path. The peak cell shows elevated mean and a long tail; the cell
+        on either side is tighter. This matches the Lite <code>97 k</code> cell, where
+        the per-call max is 6 × the min while neighbouring cells are within 2 ×.</li>
+      <li><strong>Prefill-chunking sweet spot.</strong> Prefill is usually chunked into
+        fixed-size pieces. At the size where the chunk count rises by one, you pay for
+        pipeline-bubble or scheduling overhead that the next size up amortises away
+        because its chunks are now the natural size for the new pipeline depth.</li>
+      <li><strong>Cache-slab fragmentation.</strong> KV-cache allocators usually grab
+        slabs in fixed sizes; allocating just past a slab boundary can force a copy or a
+        fragmentation event that allocating well past it does not.</li>
+    </ul>
+    <p>
+      We do not have direct visibility into which of these is happening. We do have
+      <code>provider_request_id</code>, <code>system_fingerprint</code>, and
+      <code>provider_model_version</code> stamped on every row. The right follow-up is
+      a dense repeat at the hump cell with sweep order randomised: if the fingerprint
+      cleanly partitions the slow calls from the fast calls inside the same cell, the
+      hump is bimodal routing. If the fingerprint is constant, the slowness is inside one
+      pool — chunking or scheduling becomes the primary suspect.
+    </p>
+  </section>
+
+  <section id="decode-dip">
+    <h2><span class="num">§5</span>A strange decode dip</h2>
+    <p class="lede">For some models, decode-per-token <em>falls</em> as context grows. This is the wrong direction.</p>
+
+    <p>
+      Once prefill finishes and the model starts emitting, every token it produces requires
+      a fresh attention pass over the entire prompt-plus-output-so-far. A longer prompt
+      means a larger KV cache to read on every step, which means — in the textbook —
+      that <code>decode_ms_per_token</code> should be <em>flat</em> (cache size growing
+      only on the output side, output is small) or <em>gently increasing</em> (if KV-cache
+      reads scale visibly with prefix length). What it should not do is fall.
+    </p>
+    <p>It falls.</p>
+
+    <table>
+      <caption><span class="tab">tab. 4</span>Adjacent-bucket cells where mean <code>decode_ms_per_token</code> dropped meaningfully.</caption>
+      <thead>
+        <tr><th>model</th><th>prompt</th><th>tokens (from → to)</th><th>decode ms/tok</th><th>Δ</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>song-toads</td><td>14.9 k → 29.6 k</td><td>34.8 → 9.2</td><td class="hi">−74%</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>song-toads</td><td>3.7 k → 7.4 k</td><td>14.2 → 7.5</td><td>−47%</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d2)"></span>gpt-4.1-nano</td><td>song-toads</td><td>7.4 k → 14.9 k</td><td>21.2 → 12.7</td><td>−40%</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d8)"></span>claude-haiku-4-5</td><td>song-toads</td><td>4.2 k → 8.4 k</td><td>18.8 → 13.1</td><td>−30%</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>song-toads</td><td>62 k → 191 k</td><td>4.83 → 4.26 → 3.31 → 2.63</td><td class="hi">−46%</td></tr>
+      </tbody>
+    </table>
+
+    <p>
+      The Lite case is the cleanest of these and the most provocative: a monotonic,
+      three-step descent across a full <code>3×</code> in context length. Per-token
+      decode is <em>nearly halving</em> while the model has more KV cache to walk on
+      every step than it did at the start. There is no honest reading of textbook
+      attention that produces that shape. Something else is going on, and it is going
+      on at a particular range of input sizes.
+    </p>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 3</span>
+        <span class="fig-title">decode time per token vs context</span>
+        <span class="fig-meta">linear y · mean per cell · all prompt shapes</span>
+      </figcaption>
+      <svg class="chart" data-chart="decode" aria-label="Decode milliseconds per token versus context"></svg>
+      <p class="fig-caption">
+        Two stories on one axis. <em>Lite</em> and <em>gemini-2.5-flash</em> both
+        <strong>fall</strong> in the <code>60–240 k</code> band — Lite goes
+        <code>5.15 → 2.11 ms/tok</code> across that range. The gpt-4o-mini and
+        gpt-5.4-mini lines do the textbook thing and rise as the KV cache grows.
+        Whatever the Gemini long-context route is doing, it is doing the opposite of
+        what a single dense decoder should do.
+      </p>
+    </figure>
+
+    <h3>Candidates, in order of how badly we want them to be true</h3>
+
+    <div class="hypothesis">
+      <h4><span class="h-num">H1</span>Speculative decoding kicks in past a routing threshold</h4>
+      <p>
+        Long-context routes are exactly the kind of expensive request that pays for
+        speculative decoding most: you have a fat KV cache and you want to amortise
+        cache-fetch cost across as many emitted tokens per scheduler step as possible.
+        If the long-context tier runs a draft model that proposes 4–8 tokens per
+        step and the target accepts most of them, observed <code>decode_ms_per_token</code>
+        falls dramatically — not because the model got faster, but because more tokens
+        come out per "step" the wall clock sees.
+      </p>
+      <p class="falsify">
+        Sweep <code>max_tokens</code> wide on a fixed prompt across the threshold and
+        inspect <code>chunk_timestamps_ms</code>. Speculative acceptance produces
+        distinctively bursty inter-event timings (clusters of zero-ms gaps separated by
+        full-step intervals); textbook one-token-at-a-time decode is uniform. A change
+        in burstiness across the boundary is the signature.
+      </p>
+    </div>
+
+    <div class="hypothesis">
+      <h4><span class="h-num">H2</span>The long-context tier is a different machine entirely</h4>
+      <p>
+        Closely related but mechanistically distinct: the long-context pool may run on
+        different hardware (more memory bandwidth, larger TPU/GPU pods, different
+        interconnect topology) where per-token costs are simply lower in absolute
+        terms. The TTFT step we see in §3 would in this story be the <em>cost</em> of
+        the routing change — queuing for and binding to the new pool — and the
+        decode dip would be the <em>benefit</em>.
+      </p>
+      <p class="falsify">
+        Cross-reference <code>system_fingerprint</code> /
+        <code>provider_model_version</code> across the boundary in dense repeats. If
+        the fingerprint changes coincident with the decode dip, we have direct
+        evidence. If it does not, we are inside one pool and need a different story.
+      </p>
+    </div>
+
+    <div class="hypothesis">
+      <h4><span class="h-num">H3</span>Streaming chunk coalescing distorts our denominator</h4>
+      <p>
+        Most boring possibility: provider streaming can buffer multiple emitted tokens
+        into a single SSE chunk under load. We compute decode time as <em>(last content
+        delta − first content delta) / (output_tokens − 1)</em>, so if at long context
+        the provider starts emitting larger chunks, our <em>numerator</em> shrinks
+        (last content event arrives sooner relative to the actual end-of-decode) without
+        any real speedup. This is an observability artifact, not a model phenomenon.
+      </p>
+      <p class="falsify">
+        Compare against a non-streaming run with the same prompt &amp; size. If the dip
+        survives in <code>total_ms − first_response_byte_ms</code> normalised by
+        <code>output_tokens</code> with streaming off, it is real. If it disappears, we
+        were measuring chunk policy.
+      </p>
+    </div>
+
+    <div class="hypothesis">
+      <h4><span class="h-num">H4</span>KV-cache layout optimises across some boundary</h4>
+      <p>
+        Above some prefix size the runtime may switch from a per-request KV layout
+        optimised for short prompts (e.g., dense in HBM, addressed per-head) to a
+        paged/blocked layout designed for long contexts. The latter has worse TTFT
+        (the step we see) and better per-decode cache-read amortisation (the dip we
+        see). This is internally consistent with both phenomena coming from a single
+        switch.
+      </p>
+      <p class="falsify">
+        Hold the prompt fixed, vary <code>max_tokens</code> from 16 up to 512, and
+        check whether <code>decode_ms_per_token</code> drops at the same prefix-size
+        boundary regardless of output length. If the boundary is purely about the
+        prefix, this is the right story. If it depends on output length too, the
+        mechanism is downstream of the cache layout.
+      </p>
+    </div>
+
+    <p>
+      None of these is testable from the dataset we already have. Each becomes testable
+      with a small, directed follow-up sweep — which is roughly the work plan that
+      falls out of this post.
+    </p>
+  </section>
+
+  <section id="caveats">
+    <h2><span class="num">§6</span>What this is not</h2>
+    <p>A short list of things this page does <em>not</em> claim, despite the temptation:</p>
+    <ul>
+      <li>It does not claim that any specific model uses sparse attention. Sub-linear
+        TTFT scaling is consistent with sparse attention <em>and</em> with prefill
+        chunking, KV-cache reuse across requests, MoE routing, hardware tier changes,
+        and several other things we cannot see from outside.</li>
+      <li>It does not claim the humps in §3 are stable across time. They are stable
+        across the prompt shapes in this sweep, taken in randomised order over a few
+        hours. A hump that disappears next week was probably a deploy.</li>
+      <li>It does not claim the decode dip in §5 is a property of the model itself,
+        rather than a property of the path the request takes through the serving
+        stack. H3 in particular is the "we measured a streaming policy" null hypothesis
+        and has not been ruled out.</li>
+    </ul>
+    <p>
+      What this page <em>does</em> claim is that all seven of these models, on the floors
+      where compute should dominate, scale much better than dense attention predicts;
+      that several carry reproducible TTFT humps at provider-characteristic context
+      sizes (OpenAI clusters near <code>~30 k</code>, Gemini near <code>~100 k</code>);
+      and that decode time for several of them moves in the direction that should be
+      impossible. The interesting work from here is small, sharp, and falsifiable. The
+      <a href="/">interactive viewer</a> is the place to slice the data however you
+      like and check the claims yourself.
+    </p>
+  </section>
+
+  <footer class="colophon">
+    <span>attention — field notes 001</span>
+    <span><a href="/">interactive viewer →</a></span>
+  </footer>
+
+<script>
+// —————————————————————————————————————————— embedded data, log-bucketed (4 bins/decade)
+
+const TTFT = {
+  'gemini/gemini-3.1-flash-lite':       [[66.4,503],[130.5,527],[221.7,623],[287.8,559],[475.8,551],[900.3,517],[1883.6,496],[3763.3,563],[6936.0,804],[7811.8,633],[15388.5,733],[30089.3,935],[60794.1,1176],[99901.5,1181],[168479.1,912],[274556.9,1350],[606883.8,2157],[866604.7,5027]],
+  'anthropic/claude-haiku-4-5':         [[79.8,408],[150.4,391],[276.5,410],[553.3,414],[1067.7,446],[2130.9,519],[3879.8,465],[5191.7,498],[8772.5,526],[17763.3,608],[34463.6,817],[66808.5,1241],[100029.1,1342],[156251.3,2390]],
+  'gemini/gemini-2.5-flash':            [[64.7,440],[130.8,425],[217.2,289],[285.3,313],[463.9,349],[890.8,334],[1857.2,337],[3706.7,444],[6912.3,462],[7812.0,522],[15122.9,430],[29982.7,787],[59917.8,1107],[101761.8,2026],[178405.8,1883],[274446.7,3363],[606977.5,6170],[867038.7,14059]],
+  'gemini/gemini-3-flash-preview':      [[65.9,500],[131.3,526],[222.6,492],[274.7,526],[475.7,512],[903.6,562],[1885.1,514],[3765.8,516],[6931.3,585],[7812.1,663],[15353.9,803],[30413.8,1023],[60699.2,1162],[99867.9,1690],[167357.2,2127],[274575.1,2861],[606735.8,9345],[867290.3,20657]],
+  'openai/gpt-5.4-mini':                [[69.0,267],[130.6,233],[212.9,226],[266.3,287],[502.7,242],[966.7,267],[1874.8,300],[3439.6,266],[6880.6,305],[9765.0,420],[15863.2,414],[31070.0,554],[58987.2,779],[89258.4,996],[169154.9,1662],[244314.0,3496]],
+  'openai/gpt-4o-mini':                 [[69.3,462],[131.7,295],[183.4,258],[268.4,365],[521.2,340],[1010.6,270],[1876.5,354],[3269.7,522],[6552.8,476],[9737.0,888],[16468.1,975],[32761.7,1140],[58988.0,2252],[87437.1,4706]],
+  'openai/gpt-4.1-nano':                [[69.8,176],[132.2,355],[195.7,261],[267.7,230],[519.1,180],[1013.7,333],[1875.8,229],[3274.3,271],[6549.9,280],[9714.0,386],[16478.6,470],[32744.1,610],[58987.7,926],[87394.8,1409],[178413.4,2104],[305252.7,5617],[549796.5,23247]],
+};
+
+// fig.2 — per-cell MEAN TTFT (the hump shows in mean, not min)
+const TTFT_MEAN = {
+  'gemini/gemini-3.1-flash-lite': [[66.0,932],[130.5,893],[225.5,821],[287.8,1005],[475.8,777],[901.6,913],[1886.6,742],[3775.6,840],[6936.0,1177],[7811.7,839],[15412.3,1170],[30089.3,1325],[61014.6,1571],[99727.8,2091],[167378.5,1349],[270941.0,2369],[606883.8,3690],[866604.7,5449]],
+  'gemini/gemini-2.5-flash':      [[64.5,474],[130.6,499],[217.2,446],[285.3,390],[466.1,536],[894.7,440],[1870.1,491],[3706.7,555],[6912.3,555],[7811.4,616],[15240.2,765],[30262.4,974],[60467.6,2034],[101297.7,3155],[177913.3,3215],[267892.4,4536],[606977.5,8307],[867038.7,17924]],
+  'openai/gpt-4o-mini':           [[69.4,972],[131.7,544],[183.4,401],[268.4,485],[521.2,532],[1000.2,521],[1876.5,549],[3311.7,766],[6552.8,1493],[9737.0,1688],[16468.1,2512],[32761.7,4850],[58988.0,4500],[87897.8,8820]],
+  'openai/gpt-5.4-mini':          [[69.1,434],[130.6,772],[214.8,622],[266.3,462],[499.7,436],[962.9,520],[1875.0,487],[3455.3,869],[6911.9,484],[9765.0,647],[15805.4,1065],[30981.4,1158],[58987.2,1379],[89586.2,1583],[170825.7,2745],[244314.0,4384]],
+};
+
+const DECODE = {
+  'gemini/gemini-3.1-flash-lite':       [[66.7,4.96],[130.9,3.80],[239.5,4.39],[476.0,3.82],[914.5,4.98],[1927.4,4.76],[3840.9,4.03],[7812.1,4.77],[15768.6,3.55],[31104.4,4.67],[62119.0,5.15],[97123.5,4.80],[158592.4,2.94],[238404.0,2.11]],
+  'gemini/gemini-2.5-flash':            [[65.0,6.19],[130.6,5.50],[240.7,6.05],[476.8,4.87],[912.7,3.98],[3842.7,5.58],[7812.0,5.34],[15767.5,9.25],[31102.8,4.68],[62118.5,4.77],[97122.0,2.97],[170162.9,3.47],[238406.5,4.12]],
+  'openai/gpt-5.4-mini':                [[68.9,5.87],[130.5,6.39],[239.8,7.00],[477.7,6.29],[904.9,6.95],[1874.8,10.47],[3688.3,13.21],[7379.8,6.49],[14938.9,9.34],[29562.4,15.10],[58987.2,25.38],[92042.8,40.74]],
+  'openai/gpt-4o-mini':                 [[69.3,14.71],[132.0,20.75],[239.3,15.84],[479.2,8.96],[906.8,16.81],[1876.5,18.91],[3689.2,27.39],[7381.5,26.20],[14940.7,21.34],[29561.7,28.42],[58988.0,28.19],[92044.3,45.41]],
+};
+
+const COLOR = {
+  'gemini/gemini-3.1-flash-lite':       '--d3',
+  'anthropic/claude-haiku-4-5':         '--d8',
+  'gemini/gemini-2.5-flash':            '--d5',
+  'gemini/gemini-3-flash-preview':      '--d4',
+  'openai/gpt-5.4-mini':                '--d6',
+  'openai/gpt-4o-mini':                 '--d7',
+  'openai/gpt-4.1-nano':                '--d2',
+};
+
+function shortName(m) {
+  return m.split('/')[1].replace('claude-', '').replace('-preview', '').replace('20251001', '').replace(/-+$/, '');
+}
+
+// —————————————————————————————————————————— SVG renderer
+
+const NS = 'http://www.w3.org/2000/svg';
+const cv = (n) => getComputedStyle(document.body).getPropertyValue(n).trim();
+const FONT = '"Space Mono", monospace';
+
+function el(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function fmtN(v) {
+  if (v >= 1e6) return (v / 1e6).toFixed(v >= 1e7 ? 0 : 1).replace(/\.0$/, '') + 'M';
+  if (v >= 1e3) return (v / 1e3).toFixed(v >= 1e4 ? 0 : 1).replace(/\.0$/, '') + 'k';
+  if (Number.isInteger(v)) return String(v);
+  return v.toFixed(v < 1 ? 2 : 1);
+}
+
+function logTicks(lo, hi) {
+  const out = [];
+  for (let p = Math.floor(Math.log10(lo)); p <= Math.ceil(Math.log10(hi)); p++) {
+    const v = Math.pow(10, p);
+    if (v >= lo * 0.99 && v <= hi * 1.01) out.push(v);
+  }
+  return out;
+}
+function linearTicks(lo, hi, want = 6) {
+  const range = hi - lo;
+  const raw = range / want;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
+  const ticks = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) {
+    ticks.push(Number(v.toFixed(10)));
+  }
+  return ticks;
+}
+
+function drawChart(svg, opts) {
+  const W = 700, H = opts.height ?? 380;
+  const M = Object.assign({ t: 18, r: 22, b: 86, l: 64 }, opts.margin || {});
+  const series = opts.series;
+  const xType = opts.xType || 'log';
+  const yType = opts.yType || 'log';
+
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const allX = series.flatMap(s => s.points.map(p => p[0]));
+  const allY = series.flatMap(s => s.points.map(p => p[1]));
+  let xLo = Math.min(...allX), xHi = Math.max(...allX);
+  let yLo = Math.min(...allY), yHi = Math.max(...allY);
+  if (opts.xRange) { xLo = opts.xRange[0]; xHi = opts.xRange[1]; }
+  if (opts.yRange) { yLo = opts.yRange[0]; yHi = opts.yRange[1]; }
+  if (xType === 'log') { xLo *= 0.85; xHi *= 1.18; } else { const d = xHi - xLo; xLo -= d * 0.04; xHi += d * 0.06; }
+  if (yType === 'log') { yLo *= 0.78; yHi *= 1.30; } else { const d = yHi - yLo; yLo = Math.max(0, yLo - d * 0.08); yHi += d * 0.14; }
+
+  const xv = xType === 'log' ? Math.log10 : v => v;
+  const yv = yType === 'log' ? Math.log10 : v => v;
+  const xL = xv(xLo), xH = xv(xHi), yL = yv(yLo), yH = yv(yHi);
+  const X = v => M.l + ((xv(v) - xL) / (xH - xL)) * (W - M.l - M.r);
+  const Y = v => H - M.b - ((yv(v) - yL) / (yH - yL)) * (H - M.t - M.b);
+
+  const ink     = cv('--ink');
+  const inkSoft = cv('--ink-soft');
+  const muted   = cv('--muted');
+  const ruleS   = cv('--rule-soft');
+  const rule    = cv('--rule');
+  const accent  = cv('--accent');
+
+  // shaded bands
+  for (const b of (opts.bands || [])) {
+    const x0 = X(b.x0), x1 = X(b.x1);
+    svg.appendChild(el('rect', {
+      x: x0, y: M.t, width: Math.max(2, x1 - x0), height: H - M.t - M.b,
+      fill: accent, opacity: '0.08',
+    }));
+    if (b.label) {
+      svg.appendChild(el('text', {
+        x: (x0 + x1) / 2, y: M.t - 5,
+        'text-anchor': 'middle',
+        'font-family': FONT,
+        'font-size': '9',
+        'letter-spacing': '0.04em',
+        'font-weight': '700',
+        fill: accent,
+      }, b.label.toUpperCase()));
+    }
+  }
+
+  // gridlines
+  const xTicks = xType === 'log' ? logTicks(xLo, xHi) : linearTicks(xLo, xHi);
+  const yTicks = yType === 'log' ? logTicks(yLo, yHi) : linearTicks(yLo, yHi);
+  for (const t of xTicks) {
+    svg.appendChild(el('line', { x1: X(t), x2: X(t), y1: M.t, y2: H - M.b, stroke: ruleS, 'stroke-width': '0.6' }));
+  }
+  for (const t of yTicks) {
+    svg.appendChild(el('line', { x1: M.l, x2: W - M.r, y1: Y(t), y2: Y(t), stroke: ruleS, 'stroke-width': '0.6' }));
+  }
+
+  // axis frame
+  svg.appendChild(el('path', {
+    d: `M ${M.l} ${M.t} L ${M.l} ${H - M.b} L ${W - M.r} ${H - M.b}`,
+    fill: 'none', stroke: ink, 'stroke-width': '1',
+  }));
+
+  // ticks + labels
+  for (const t of xTicks) {
+    const x = X(t);
+    svg.appendChild(el('line', { x1: x, x2: x, y1: H - M.b, y2: H - M.b + 4, stroke: ink, 'stroke-width': '1' }));
+    svg.appendChild(el('text', {
+      x: x, y: H - M.b + 16,
+      'text-anchor': 'middle',
+      'font-family': FONT,
+      'font-size': '9.5',
+      fill: inkSoft,
+    }, fmtN(t)));
+  }
+  for (const t of yTicks) {
+    const y = Y(t);
+    svg.appendChild(el('line', { x1: M.l - 4, x2: M.l, y1: y, y2: y, stroke: ink, 'stroke-width': '1' }));
+    svg.appendChild(el('text', {
+      x: M.l - 7, y: y + 3.5,
+      'text-anchor': 'end',
+      'font-family': FONT,
+      'font-size': '9.5',
+      fill: inkSoft,
+    }, fmtN(t)));
+  }
+
+  // axis titles
+  if (opts.xLabel) {
+    svg.appendChild(el('text', {
+      x: M.l + (W - M.l - M.r) / 2, y: H - M.b + 38,
+      'text-anchor': 'middle',
+      'font-family': FONT,
+      'font-size': '9.5',
+      'letter-spacing': '0.04em',
+      'font-weight': '700',
+      fill: ink,
+    }, opts.xLabel.toUpperCase()));
+  }
+  if (opts.yLabel) {
+    const cy = M.t + (H - M.t - M.b) / 2;
+    svg.appendChild(el('text', {
+      x: 0, y: 0,
+      'text-anchor': 'middle',
+      'font-family': FONT,
+      'font-size': '9.5',
+      'letter-spacing': '0.04em',
+      'font-weight': '700',
+      fill: ink,
+      transform: `translate(${M.l - 46}, ${cy}) rotate(-90)`,
+    }, opts.yLabel.toUpperCase()));
+  }
+
+  // series
+  for (const s of series) {
+    const pts = s.points.slice().sort((a, b) => a[0] - b[0]);
+    let d = '';
+    pts.forEach((p, i) => { d += (i ? ' L ' : 'M ') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1); });
+    svg.appendChild(el('path', {
+      d, fill: 'none', stroke: s.color,
+      'stroke-width': '1.6',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    }));
+    for (const p of pts) {
+      svg.appendChild(el('circle', {
+        cx: X(p[0]), cy: Y(p[1]), r: '2.5',
+        fill: s.color,
+      }));
+    }
+  }
+
+  // annotations
+  for (const a of (opts.annotations || [])) {
+    svg.appendChild(el('text', {
+      x: X(a.x) + (a.dx || 0), y: Y(a.y) + (a.dy || 0),
+      'text-anchor': a.anchor || 'start',
+      'font-family': FONT,
+      'font-size': String(a.fontSize || 11),
+      'font-weight': '700',
+      fill: a.color || ink,
+    }, a.text));
+  }
+
+  // legend
+  let lx = M.l, ly = H - 18;
+  for (const s of series) {
+    const w = 6.5 * s.name.length + 24;
+    if (lx + w > W - M.r && lx > M.l) { lx = M.l; ly += 16; }
+    svg.appendChild(el('rect', { x: lx, y: ly - 8, width: 9, height: 9, fill: s.color }));
+    svg.appendChild(el('text', {
+      x: lx + 14, y: ly,
+      'font-family': FONT,
+      'font-size': '10',
+      fill: ink,
+    }, s.name));
+    lx += w;
+  }
+}
+
+function buildSeries(data, models) {
+  return models.map(m => ({ name: shortName(m), color: cv(COLOR[m]), points: data[m] }));
+}
+
+function renderAll() {
+  const f1 = document.querySelector('svg[data-chart="ttft"]');
+  if (f1) drawChart(f1, {
+    height: 400,
+    xType: 'log', yType: 'log',
+    xLabel: 'input tokens', yLabel: 'first_content_delta_ms',
+    series: buildSeries(TTFT, [
+      'gemini/gemini-3.1-flash-lite',
+      'anthropic/claude-haiku-4-5',
+      'openai/gpt-5.4-mini',
+      'gemini/gemini-2.5-flash',
+      'gemini/gemini-3-flash-preview',
+      'openai/gpt-4o-mini',
+      'openai/gpt-4.1-nano',
+    ]),
+  });
+
+  const f2 = document.querySelector('svg[data-chart="humps"]');
+  if (f2) drawChart(f2, {
+    height: 400,
+    margin: { t: 32, r: 22, b: 86, l: 64 },
+    xType: 'log', yType: 'log',
+    xLabel: 'input tokens', yLabel: 'mean first_content_delta_ms',
+    series: buildSeries(TTFT_MEAN, [
+      'gemini/gemini-3.1-flash-lite',
+      'gemini/gemini-2.5-flash',
+      'openai/gpt-4o-mini',
+      'openai/gpt-5.4-mini',
+    ]),
+    bands: [
+      { x0: 2500,  x1: 35000,  label: 'openai humps' },
+      { x0: 60000, x1: 200000, label: 'gemini humps' },
+    ],
+  });
+
+  const f3 = document.querySelector('svg[data-chart="decode"]');
+  if (f3) drawChart(f3, {
+    height: 380,
+    margin: { t: 18, r: 22, b: 86, l: 64 },
+    xType: 'log', yType: 'linear',
+    xLabel: 'input tokens', yLabel: 'decode_ms_per_token',
+    yRange: [0, 50],
+    series: buildSeries(DECODE, [
+      'gemini/gemini-3.1-flash-lite',
+      'gemini/gemini-2.5-flash',
+      'openai/gpt-5.4-mini',
+      'openai/gpt-4o-mini',
+    ]),
+    annotations: [
+      { x: 200000, y: 2.5, text: 'DIPPING', anchor: 'middle', fontSize: 10, color: cv('--accent'), dy: -8 },
+      { x: 78000,  y: 47,  text: 'RISING',  anchor: 'middle', fontSize: 10, color: cv('--ink-soft'), dy: -2 },
+    ],
+  });
+}
+
+function ready() {
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderAll);
+  else renderAll();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
+else ready();
+</script>
+
+</body>
+</html>

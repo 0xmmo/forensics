@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>attention — researcher findings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--ink:#111;--ink-soft:#444;--muted:#888;--rule:#ddd;--rule-soft:#eee;--link:#2563eb;--accent:#16a34a;--warn:#dc2626;--code-bg:#f4f4f4;--d1:#2563eb;--d2:#dc2626;--d3:#16a34a;--d4:#d97706;--d5:#7c3aed;--d6:#0891b2;--d7:#db2777;--d8:#4b5563;--d9:#059669}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:"Space Mono",ui-monospace,monospace;font-size:15px;line-height:1.4;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+body{max-width:760px;margin:0 auto;padding:3rem 1.5rem 4rem}
+a{color:var(--link);text-decoration:none}a:hover{text-decoration:underline}
+.masthead{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.75rem 1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--rule);margin-bottom:2rem}
+.wordmark{font-size:1.5rem;font-weight:700;color:var(--ink)}
+.tagline{color:var(--muted);font-size:.8rem;flex:1;min-width:0}
+.nav{display:flex;gap:.85rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+.nav a{color:var(--muted)}.nav a:hover{color:var(--ink);text-decoration:none}.nav a.active{color:var(--ink);font-weight:700}
+.article-head{margin-bottom:2rem}.article-head .title{font-size:1.5rem;font-weight:700;margin-bottom:.75rem}.article-head .dek{margin-bottom:1rem}
+.article-head .meta{display:flex;flex-wrap:wrap;gap:.4rem 1.25rem;font-size:.8rem;color:var(--muted);padding-top:.5rem;border-top:1px solid var(--rule-soft)}
+.article-head .meta dt{display:inline;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);margin-right:.4rem}
+.article-head .meta dd{display:inline;margin-right:.5rem}
+.toc{margin:0 0 2.5rem;padding:1rem 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.toc-label{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.75rem}
+.toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.3rem 1.5rem;counter-reset:toc}
+.toc li{counter-increment:toc}.toc li::before{content:'\A7' counter(toc) '. ';color:var(--muted);margin-right:.25rem}
+.toc a{color:var(--ink)}.toc a:hover{color:var(--link);text-decoration:none}
+section{margin-bottom:2.5rem}
+h2{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:1rem;border-bottom:1px solid var(--rule);padding-bottom:.5rem}
+h2 .num{color:var(--muted);margin-right:.5rem}
+.lede{color:var(--muted);margin-bottom:1rem}
+h3{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:1.5rem 0 .75rem}
+p{margin-bottom:1rem}strong{font-weight:700}em{font-style:italic}
+code{font-family:inherit;font-size:.95em;background:var(--code-bg);padding:1px 5px;border-radius:2px;white-space:nowrap}
+ul{padding-left:1.5rem;margin:0 0 1rem;list-style:none}ul li{margin-bottom:.5rem;position:relative}ul li::before{content:'*';position:absolute;left:-1.25rem;color:var(--muted)}
+blockquote{margin:1.5rem 0;padding:.5rem 0 .5rem 1rem;border-left:2px solid var(--rule);color:var(--ink)}
+sup{font-size:.7em;color:var(--link)}
+table{border-collapse:collapse;width:100%;margin:1rem 0 1.5rem;font-size:.8rem}
+th,td{text-align:right;padding:.45rem .7rem .45rem 0;border-bottom:1px solid var(--rule-soft)}
+thead th{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);border-bottom:1px solid var(--rule);padding-bottom:.45rem}
+th:first-child,td:first-child{text-align:left;padding-right:1rem;white-space:nowrap}
+table caption{text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding-bottom:.4rem}
+table caption .tab{color:var(--ink);font-weight:700;margin-right:.6rem}
+tbody tr:hover td{background:var(--code-bg)}
+td.hi{color:var(--accent);font-weight:700}td.warn{color:var(--warn);font-weight:700}td.dim{color:var(--muted)}
+.swatch{display:inline-block;width:.65em;height:.65em;background:currentColor;margin-right:.55em;vertical-align:-1px}
+.data-fig{margin:1.5rem 0 2rem;padding:1rem 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.figcap-inline{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:baseline;margin-bottom:.85rem;padding-bottom:.5rem;border-bottom:1px solid var(--rule-soft);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
+.figcap-inline .fig-num{color:var(--muted)}.figcap-inline .fig-title{color:var(--ink);font-weight:700;flex:1;min-width:0}.figcap-inline .fig-meta{color:var(--muted);text-align:right}
+svg.chart{width:100%;height:auto;display:block;overflow:visible}
+.fig-caption{color:var(--ink);font-size:.85rem;line-height:1.5;margin-top:.75rem}
+.finding{border-top:1px solid var(--rule-soft);padding:1rem 0}
+.finding h4{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.6rem}
+.finding h4 .f-num{color:var(--muted);margin-right:.5rem}
+.finding .implication{color:var(--ink);margin-top:.6rem}
+.finding .implication::before{content:'so what \2014 ';color:var(--accent);text-transform:uppercase;letter-spacing:.04em;font-weight:700;font-size:.75rem}
+.finding .test{color:var(--ink);margin-top:.6rem}
+.finding .test::before{content:'test \2014 ';color:var(--d5);text-transform:uppercase;letter-spacing:.04em;font-weight:700;font-size:.75rem}
+.colophon{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--rule);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem 1rem;color:var(--muted);font-size:.8rem}
+@media(max-width:600px){body{padding:2rem 1rem 3rem}.toc ol{grid-template-columns:1fr}.article-head .title{font-size:1.25rem}}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+<a href="/" class="wordmark">attention</a>
+<span class="tagline">llm prefill scaling observatory</span>
+<nav class="nav"><a href="/">viewer</a><a href="/findings">field notes</a><a href="/research" class="active">research</a><a href="/expert_research">expert</a></nav>
+</header>
+
+<section class="article-head">
+<div class="title">Researcher Findings</div>
+<p class="dek">Beyond prefill scaling: what 2,068 API calls across nine models, three providers, and three prompt shapes reveal about tokenizer architecture, serving infrastructure, decode-time economics, and model behavior under adversarial input.</p>
+<dl class="meta">
+<dt>Filed</dt><dd>2026-05-13</dd>
+<dt>Dataset</dt><dd>n = 2,068 calls &middot; 9 models &middot; 3 prompt shapes &middot; 7 sweeps</dd>
+<dt>Coverage</dt><dd>250 chars &ndash; 1M chars &middot; 3 providers &middot; prefill experiment</dd>
+</dl>
+</section>
+
+<nav class="toc" aria-label="contents">
+<div class="toc-label">Contents</div>
+<ol>
+<li><a href="#tokenizers">Tokenizer forensics</a></li>
+<li><a href="#context-walls">The real context window</a></li>
+<li><a href="#ranking-inversion">Rankings invert with scale</a></li>
+<li><a href="#negative-scaling">Negative scaling in Gemini Lite</a></li>
+<li><a href="#decode-divergence">The decode cost divergence</a></li>
+<li><a href="#bimodal">The universal 50/50 split</a></li>
+<li><a href="#output-collapse">Gemini 2.5 Flash output collapse</a></li>
+<li><a href="#overhead">Provider overhead fingerprints</a></li>
+<li><a href="#implications">What this means</a></li>
+</ol>
+</nav>
+
+<!-- ================================================================ S1 -->
+<section id="tokenizers">
+<h2><span class="num">&sect;1</span>Tokenizer forensics</h2>
+<p class="lede">Every call reports <code>prompt_bytes</code> and provider-reported <code>input_tokens</code>. The ratio between them &mdash; bytes per token &mdash; is a fingerprint of the tokenizer. It should not reveal anything interesting. It reveals a lot.</p>
+
+<p>We sent three prompt types at the same byte sizes: <code>song-toads</code> (natural English filler), <code>needle-p50</code> (same filler with an embedded retrieval code), and <code>random</code> (hex-encoded random bytes). The bytes/token ratio on structured text tells you about vocabulary size and merge quality. The ratio on random bytes tells you about the tokenizer's fallback strategy.</p>
+
+<table>
+<caption><span class="tab">tab. 1</span>Bytes per token at large context (&gt; 100 KB), by provider family and prompt type.</caption>
+<thead><tr><th>provider family</th><th>structured (song/needle)</th><th>random (hex)</th><th>ratio</th></tr></thead>
+<tbody>
+<tr><td><span class="swatch" style="color:var(--d4)"></span>Gemini (all 3 models)</td><td>4.08 &ndash; 4.19</td><td class="hi">1.15</td><td class="dim">3.6&times;</td></tr>
+<tr><td><span class="swatch" style="color:var(--d6)"></span>OpenAI (all 5 models)</td><td>4.29 &ndash; 4.41</td><td>1.64</td><td class="dim">2.7&times;</td></tr>
+<tr><td><span class="swatch" style="color:var(--d8)"></span>Anthropic (Haiku 4.5)</td><td>3.79 &ndash; 3.90</td><td>1.55</td><td class="dim">2.5&times;</td></tr>
+</tbody>
+</table>
+
+<figure class="data-fig">
+<figcaption class="figcap-inline"><span class="fig-num">fig. 1</span><span class="fig-title">bytes per token by provider and content type</span><span class="fig-meta">avg at &gt;100 KB prompt</span></figcaption>
+<svg class="chart" data-chart="tokenizer" aria-label="Tokenizer efficiency bar chart"></svg>
+<p class="fig-caption">Gemini's tokenizer (green) is nearly byte-level on random hex content (1.15 bpt) but compresses English comparably to OpenAI. Anthropic (grey) achieves the best compression on structured text. All models within a provider family share one tokenizer.</p>
+</figure>
+
+<div class="finding"><h4><span class="f-num">F1</span>All OpenAI models share one tokenizer</h4>
+<p>gpt-3.5-turbo-0125, gpt-4o-mini, gpt-4.1-mini, gpt-4.1-nano, and gpt-5.4-mini all produce <strong>identical</strong> bytes/token ratios &mdash; 4.29&ndash;4.41 on structured text, 1.63&ndash;1.66 on random. Five models across at least three generations, all using the same tokenizer.</p>
+<p class="implication">Tokenizer stability across generations means OpenAI can share KV caches, embedding tables, and prefix-cache infrastructure across model versions without translation layers.</p></div>
+
+<div class="finding"><h4><span class="f-num">F2</span>All Gemini models share a different tokenizer &mdash; one that is nearly byte-level on random input</h4>
+<p>The three Gemini models produce <strong>1.15 bytes/token</strong> on random hex &mdash; nearly every byte becomes its own token. This is consistent with a tokenizer that has extensive byte-level fallback paths &mdash; likely a SentencePiece variant with byte-fallback enabled.</p>
+<p class="implication">Gemini's tokenizer inflates random/high-entropy content into far more tokens than OpenAI's does. This has direct cost and context-window implications &mdash; see &sect;2.</p></div>
+
+<div class="finding"><h4><span class="f-num">F3</span>Anthropic's tokenizer is the most efficient on natural language</h4>
+<p>Claude Haiku 4.5 achieves <strong>3.79&ndash;3.90 bytes/token</strong> on structured text &mdash; roughly <strong>13% fewer tokens</strong> than OpenAI for the same English text, and <strong>7% fewer</strong> than Gemini. Fewer tokens means less KV cache, fewer attention operations, and lower cost.</p></div>
+</section>
+
+<!-- ================================================================ S2 -->
+<section id="context-walls">
+<h2><span class="num">&sect;2</span>The real context window</h2>
+<p class="lede">A model's context window is measured in tokens. But the <em>effective</em> context window in bytes depends entirely on what you put in it. Random content hits the wall 2.5&ndash;3.8&times; sooner.</p>
+
+<table>
+<caption><span class="tab">tab. 2</span>Maximum successful prompt size by content type and model.</caption>
+<thead><tr><th>model</th><th>structured (max bytes)</th><th>struct tok</th><th>random (max bytes)</th><th>random tok</th><th>byte ratio</th></tr></thead>
+<tbody>
+<tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>1,001 KB</td><td>227 k</td><td class="warn">400 KB</td><td>245 k</td><td class="dim">2.5&times;</td></tr>
+<tr><td><span class="swatch" style="color:var(--d7)"></span>gpt-4o-mini</td><td>401 KB</td><td>92 k</td><td class="warn">128 KB</td><td>78 k</td><td class="dim">3.1&times;</td></tr>
+<tr><td><span class="swatch" style="color:var(--d8)"></span>claude-haiku-4-5</td><td>601 KB</td><td>154 k</td><td class="warn">256 KB</td><td>165 k</td><td class="dim">2.3&times;</td></tr>
+<tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>1,002 KB</td><td>238 k</td><td>1,000 KB</td><td class="warn">867 k</td><td class="dim">1.0&times;</td></tr>
+<tr><td><span class="swatch" style="color:var(--d2)"></span>gpt-3.5-turbo-0125</td><td>64 KB</td><td>15 k</td><td class="warn">16 KB</td><td>10 k</td><td class="dim">4.0&times;</td></tr>
+</tbody>
+</table>
+
+<p><strong>gpt-5.4-mini accepts 1 MB of English but rejects 600 KB of random content</strong>. Same model, same API &mdash; because 600 KB of hex encodes to ~367k tokens (at 1.64 bpt), which exceeds the context window, while 1 MB of English encodes to ~227k tokens (at 4.40 bpt).</p>
+
+<blockquote>Your context window is not a number on a spec sheet. It is a function of your content's entropy and your tokenizer's fallback strategy.</blockquote>
+</section>
+
+<!-- ================================================================ S3 -->
+<section id="ranking-inversion">
+<h2><span class="num">&sect;3</span>Rankings invert with scale</h2>
+<p class="lede">The fastest model at 1 KB is the slowest at 1 MB. Model selection for latency-sensitive applications depends entirely on your input size.</p>
+
+<table>
+<caption><span class="tab">tab. 3</span>TTFT floor rank at representative byte sizes (lower is faster).</caption>
+<thead><tr><th>model</th><th>tiny (&lt;1 KB)</th><th>64 KB</th><th>256 KB</th><th>601 KB</th><th>1 MB</th></tr></thead>
+<tbody>
+<tr><td><span class="swatch" style="color:var(--d2)"></span>gpt-4.1-nano</td><td class="hi">#1 (176 ms)</td><td>#2 (359)</td><td>#2 (882)</td><td>#3 (1,730)</td><td>#5 (4,876)</td></tr>
+<tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>#2 (233)</td><td class="hi">#1 (349)</td><td class="hi">#1 (779)</td><td>#2 (1,376)</td><td>#4 (3,353)</td></tr>
+<tr><td><span class="swatch" style="color:var(--d5)"></span>gemini-2.5-flash</td><td>#5 (289)</td><td>#3 (590)</td><td>#6 (2,290)</td><td>#5 (2,482)</td><td>#6 (4,650)</td></tr>
+<tr><td><span class="swatch" style="color:var(--d8)"></span>claude-haiku-4-5</td><td>#7 (391)</td><td>#4 (608)</td><td>#4 (1,241)</td><td>#4 (2,229)</td><td class="dim">rejected</td></tr>
+<tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>#8 (461)</td><td>#5 (733)</td><td>#3 (1,181)</td><td class="hi">#1 (912)</td><td class="hi">#1 (1,732)</td></tr>
+<tr><td><span class="swatch" style="color:var(--d4)"></span>gemini-3-flash-preview</td><td>#9 (492)</td><td>#6 (911)</td><td>#5 (1,268)</td><td>#6 (2,127)</td><td>#3 (2,861)</td></tr>
+</tbody>
+</table>
+
+<figure class="data-fig">
+<figcaption class="figcap-inline"><span class="fig-num">fig. 2</span><span class="fig-title">TTFT floor vs prompt size &mdash; the crossover</span><span class="fig-meta">log-log &middot; min per byte-bucket</span></figcaption>
+<svg class="chart" data-chart="crossover" aria-label="TTFT ranking crossover chart"></svg>
+<p class="fig-caption"><em>gpt-4.1-nano</em> (red) starts at 176 ms and ends at 4,876 ms &mdash; a 28&times; expansion. <em>gemini-3.1-flash-lite</em> (green) starts at 461 ms and ends at 1,732 ms &mdash; a 3.8&times; expansion. The lines cross near 256 KB.</p>
+</figure>
+
+<figure class="data-fig">
+<figcaption class="figcap-inline"><span class="fig-num">fig. 3</span><span class="fig-title">prefill throughput &mdash; tokens processed per second at the latency floor</span><span class="fig-meta">log-log &middot; max(input_tokens) / min(TTFT)</span></figcaption>
+<svg class="chart" data-chart="throughput" aria-label="Throughput chart"></svg>
+<p class="fig-caption"><em>Gemini Lite</em> crosses 100k tok/s at 400 KB and reaches <strong>184k tok/s</strong> at 1 MB &mdash; its throughput <em>increases</em> with context. <em>gpt-5.4-mini</em> reaches 111k tok/s at 1 MB.</p>
+</figure>
+</section>
+
+<!-- ================================================================ S4 -->
+<section id="negative-scaling">
+<h2><span class="num">&sect;4</span>Negative scaling in Gemini Lite</h2>
+<p class="lede">Gemini 3.1 Flash Lite gets <em>faster</em> from 400 KB to 600 KB. The TTFT floor drops from 1,181 ms to 912 ms as prompt size grows 50%. This should not happen.</p>
+
+<table>
+<caption><span class="tab">tab. 4</span>Gemini 3.1 Flash Lite TTFT floor by size (song-toads, all reps).</caption>
+<thead><tr><th>prompt bytes</th><th>input tokens</th><th>n</th><th>floor ms</th><th>&alpha; from prev</th></tr></thead>
+<tbody>
+<tr><td>64 KB</td><td>15,768</td><td>9</td><td>733</td><td class="dim">0.21</td></tr>
+<tr><td>128 KB</td><td>31,104</td><td>9</td><td>935</td><td class="dim">0.35</td></tr>
+<tr><td>256 KB</td><td>62,120</td><td>9</td><td>1,181</td><td class="dim">0.33</td></tr>
+<tr><td>400 KB</td><td>97,123</td><td>9</td><td>1,181</td><td class="dim">0.01</td></tr>
+<tr><td>601 KB</td><td>143,715</td><td>9</td><td class="hi">912</td><td class="warn">&minus;0.64</td></tr>
+<tr><td>801 KB</td><td>191,322</td><td>3</td><td>1,108</td><td class="dim">0.55</td></tr>
+<tr><td>1,001 KB</td><td>238,410</td><td>3</td><td>1,732</td><td class="dim">&mdash;</td></tr>
+</tbody>
+</table>
+
+<figure class="data-fig">
+<figcaption class="figcap-inline"><span class="fig-num">fig. 4</span><span class="fig-title">Gemini Lite raw scatter &mdash; the negative scaling zone</span><span class="fig-meta">each dot = one call &middot; linear y</span></figcaption>
+<svg class="chart" data-chart="lite-scatter" aria-label="Gemini Lite scatter plot"></svg>
+<p class="fig-caption">Every individual call at 601 KB sits <em>below</em> the median of the 256 KB distribution. The 6.8-second spike at 400 KB is the only call that looks like a routing miss.</p>
+</figure>
+
+<p>The simplest explanation is a <strong>routing transition near ~100k tokens</strong> that shifts the request to a compute tier with better throughput. The flat region from 256&ndash;400 KB is the transition zone; by 601 KB the request has cleanly landed on the new tier.</p>
+
+<blockquote>A request at 601 KB completes its entire round trip &mdash; prefill and decode of 96 tokens &mdash; in 1,148 ms at the floor. A request at 256 KB, with 2.3&times; fewer tokens, takes 1,704 ms. The longer request finishes first.</blockquote>
+</section>
+
+<!-- ================================================================ S5 -->
+<section id="decode-divergence">
+<h2><span class="num">&sect;5</span>The decode cost divergence</h2>
+<p class="lede">Decode cost per token should be roughly flat or gently rising with context. Instead, models diverge into two populations: those where decode cost explodes, and those where it falls.</p>
+
+<table>
+<caption><span class="tab">tab. 5</span>Decode ms/token at representative prompt sizes (song-toads, output &ge; 90 tokens).</caption>
+<thead><tr><th>model</th><th>tiny</th><th>128 KB</th><th>256 KB</th><th>601 KB</th><th>1 MB</th></tr></thead>
+<tbody>
+<tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>4.6</td><td>4.7</td><td>4.8</td><td class="hi">3.3</td><td class="hi">3.3</td></tr>
+<tr><td><span class="swatch" style="color:var(--d4)"></span>gemini-3-flash-preview</td><td>7.1</td><td>8.5</td><td>8.0</td><td>12.5</td><td>11.7</td></tr>
+<tr><td><span class="swatch" style="color:var(--d8)"></span>claude-haiku-4-5</td><td>11.8</td><td>11.1</td><td>11.0</td><td>12.5</td><td class="dim">&mdash;</td></tr>
+<tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>7.1</td><td>9.1</td><td>8.9</td><td>31.8</td><td class="warn">108.4</td></tr>
+<tr><td><span class="swatch" style="color:var(--d2)"></span>gpt-4.1-nano</td><td>14.1</td><td>12.0</td><td>18.3</td><td>17.7</td><td class="warn">67.5</td></tr>
+<tr><td><span class="swatch" style="color:var(--d7)"></span>gpt-4o-mini</td><td>18.5</td><td>31.9</td><td>34.6</td><td class="dim">&mdash;</td><td class="dim">&mdash;</td></tr>
+</tbody>
+</table>
+
+<figure class="data-fig">
+<figcaption class="figcap-inline"><span class="fig-num">fig. 5</span><span class="fig-title">decode ms/token vs prompt size</span><span class="fig-meta">log-log &middot; mean per cell &middot; output &ge; 90 tok</span></figcaption>
+<svg class="chart" data-chart="decode-div" aria-label="Decode divergence chart"></svg>
+<p class="fig-caption">At 1 MB, <em>gpt-5.4-mini</em> averages <strong>108 ms/tok</strong> &mdash; each output token takes more than a tenth of a second. <em>Gemini Lite</em> averages <strong>3.3 ms/tok</strong>. A <strong>33&times;</strong> difference.</p>
+</figure>
+
+<figure class="data-fig">
+<figcaption class="figcap-inline"><span class="fig-num">fig. 6</span><span class="fig-title">prefill fraction of total request time</span><span class="fig-meta">log x &middot; linear y &middot; song-toads &middot; output &ge; 90 tok</span></figcaption>
+<svg class="chart" data-chart="prefill-frac" aria-label="Prefill fraction chart"></svg>
+<p class="fig-caption"><em>Gemini Lite</em> climbs to 88% prefill at 1 MB &mdash; decode is almost free. <em>gpt-5.4-mini</em> peaks at 59% then <em>falls</em> to 24% at 1 MB as decode cost explodes.</p>
+</figure>
+
+<div class="finding"><h4><span class="f-num">F4</span>Prefill fraction tells you what regime a model is in</h4>
+<p>For Gemini Lite at 1 MB, prefill is <strong>87.8%</strong> of total time &mdash; decode for 96 tokens costs 240 ms. For gpt-5.4-mini at 1 MB, prefill is only <strong>24.4%</strong> &mdash; decode for 100 tokens costs 10.4 seconds. Total request: 1.97 s vs 13.7 s.</p>
+<p class="implication">Every output token at 1 MB context costs ~108 ms on gpt-5.4-mini vs ~3.3 ms on Gemini Lite. The difference between <code>max_tokens=100</code> and <code>max_tokens=1000</code> at 1 MB is ~97 seconds on gpt-5.4-mini versus ~3 seconds on Gemini Lite.</p></div>
+</section>
+
+<!-- ================================================================ S6 -->
+<section id="bimodal">
+<h2><span class="num">&sect;6</span>The universal 50/50 split</h2>
+<p class="lede">When fed random hex with a "write a story" instruction appended, every model that can produce short output produces <em>exactly</em> a 50/50 split between very short (&le;10 tokens) and very long (~1,000 tokens). No model produces a medium-length response. Not once.</p>
+
+<table>
+<caption><span class="tab">tab. 6</span>Output length distribution on <code>random</code> prompts (<code>temperature = 0</code>).</caption>
+<thead><tr><th>model</th><th>n</th><th>short (&le;10 tok)</th><th>long (&gt;500 tok)</th><th>split</th></tr></thead>
+<tbody>
+<tr><td><span class="swatch" style="color:var(--d8)"></span>claude-haiku-4-5</td><td>66</td><td>33</td><td>33</td><td class="hi">50 / 50</td></tr>
+<tr><td><span class="swatch" style="color:var(--d5)"></span>gemini-2.5-flash</td><td>90</td><td>45</td><td>45</td><td class="hi">50 / 50</td></tr>
+<tr><td><span class="swatch" style="color:var(--d4)"></span>gemini-3-flash-preview</td><td>89</td><td>44</td><td>45</td><td class="hi">50 / 50</td></tr>
+<tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>90</td><td>45</td><td>45</td><td class="hi">50 / 50</td></tr>
+<tr><td><span class="swatch" style="color:var(--d2)"></span>gpt-4.1-nano</td><td>90</td><td>45</td><td>45</td><td class="hi">50 / 50</td></tr>
+<tr><td><span class="swatch" style="color:var(--d7)"></span>gpt-4o-mini</td><td>60</td><td>30</td><td>30</td><td class="hi">50 / 50</td></tr>
+<tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>72</td><td>36</td><td>36</td><td class="hi">50 / 50</td></tr>
+<tr><td style="color:var(--muted)">gpt-4.1-mini</td><td>45</td><td>0</td><td>45</td><td class="dim">0 / 100</td></tr>
+<tr><td style="color:var(--muted)">gpt-3.5-turbo</td><td>21</td><td>0</td><td>21</td><td class="dim">0 / 100</td></tr>
+</tbody>
+</table>
+
+<p>Seven out of nine models show a perfectly bimodal distribution with zero observations in between. At <code>temperature = 0</code>, the 50/50 split implies the model is at a near-exact tie in the logit for the first token. The per-call nonce pushes the decision one way or the other.</p>
+
+<p>The two exceptions: <strong>gpt-4.1-mini</strong> and <strong>gpt-3.5-turbo</strong> <em>always</em> produce long output. The larger model is <em>more</em> willing to engage with random content, not less.</p>
+
+<p class="test">Vary <code>temperature</code> from 0.0 to 1.0 and track the short/long ratio. If the tie is a sharp phase transition, even <code>temperature = 0.1</code> should push the split decisively one way.</p>
+</section>
+
+<!-- ================================================================ S7 -->
+<section id="output-collapse">
+<h2><span class="num">&sect;7</span>Gemini 2.5 Flash output collapse</h2>
+<p class="lede">Gemini 2.5 Flash abruptly stops generating at ~30&ndash;50 tokens on <code>song-toads</code> prompts once context exceeds 256 KB. Other Gemini models continue to 96 tokens (MAX_TOKENS).</p>
+
+<table>
+<caption><span class="tab">tab. 7</span>Output tokens on <code>song-toads</code>, Gemini models at long context.</caption>
+<thead><tr><th>prompt size</th><th>2.5 Flash (avg out)</th><th>2.5 Flash (finish)</th><th>3 Flash Preview</th><th>3.1 Flash Lite</th></tr></thead>
+<tbody>
+<tr><td>128 KB</td><td>100</td><td class="dim">MAX_TOKENS</td><td>96</td><td>96</td></tr>
+<tr><td>256 KB</td><td class="warn">37</td><td class="warn">STOP</td><td>96</td><td>96</td></tr>
+<tr><td>400 KB</td><td class="warn">39</td><td class="warn">STOP</td><td>96</td><td>96</td></tr>
+<tr><td>601 KB</td><td class="warn">37</td><td class="warn">STOP</td><td>96</td><td>96</td></tr>
+<tr><td>801 KB</td><td class="warn">46</td><td class="warn">STOP</td><td>96</td><td>96</td></tr>
+<tr><td>1 MB</td><td class="warn">39</td><td class="warn">STOP</td><td>96</td><td>96</td></tr>
+</tbody>
+</table>
+
+<figure class="data-fig">
+<figcaption class="figcap-inline"><span class="fig-num">fig. 7</span><span class="fig-title">Gemini 2.5 Flash output length vs context</span><span class="fig-meta">song-toads &middot; max_tokens = 100</span></figcaption>
+<svg class="chart" data-chart="output-collapse" aria-label="Output collapse chart"></svg>
+<p class="fig-caption">Output drops from ~100 tokens to ~37 at exactly the 256 KB boundary. No gradual decline. The collapse is specific to the 2.5 generation &mdash; 3.x models produce 96 tokens at every size.</p>
+</figure>
+
+<p class="implication">For applications relying on long-context Gemini 2.5 Flash to produce extended output, the prompt must be structured to elicit a specific response. Open-ended generation will be truncated past 256 KB.</p>
+</section>
+
+<!-- ================================================================ S8 -->
+<section id="overhead">
+<h2><span class="num">&sect;8</span>Provider overhead fingerprints</h2>
+<p class="lede">The gap between <code>first_response_byte_ms</code> and <code>first_content_delta_ms</code> reveals how each provider's streaming implementation works.</p>
+
+<table>
+<caption><span class="tab">tab. 8</span>Streaming overhead: gap between first HTTP byte and first content token.</caption>
+<thead><tr><th>provider</th><th>gap at tiny</th><th>gap at 256 KB</th><th>gap at 601 KB</th><th>pattern</th></tr></thead>
+<tbody>
+<tr><td><span class="swatch" style="color:var(--d4)"></span>Gemini (all models)</td><td>0&ndash;1 ms</td><td>0 ms</td><td>0&ndash;1 ms</td><td class="dim">zero-gap: first byte IS first content</td></tr>
+<tr><td><span class="swatch" style="color:var(--d6)"></span>OpenAI (gpt-5.4-mini)</td><td>3&ndash;10 ms</td><td>0 ms</td><td>0 ms</td><td class="dim">small gap at tiny, zero at large</td></tr>
+<tr><td><span class="swatch" style="color:var(--d2)"></span>OpenAI (gpt-4.1-nano)</td><td>16&ndash;25 ms</td><td>21 ms</td><td>44 ms</td><td class="dim">consistent gap, grows slightly</td></tr>
+<tr><td><span class="swatch" style="color:var(--d7)"></span>OpenAI (gpt-4o-mini)</td><td>25&ndash;44 ms</td><td>26 ms</td><td class="dim">&mdash;</td><td class="dim">larger consistent gap</td></tr>
+<tr><td><span class="swatch" style="color:var(--d8)"></span>Anthropic (Haiku 4.5)</td><td>0&ndash;1 ms</td><td>0 ms</td><td>0 ms</td><td class="dim">zero-gap: first byte IS first content</td></tr>
+</tbody>
+</table>
+
+<div class="finding"><h4><span class="f-num">F5</span>No backend drift detected in any sweep</h4>
+<p>We checked <code>system_fingerprint</code> and <code>provider_model_version</code> within every sweep. No changes were observed. The latency patterns are stable features of a single deployment, not artifacts of mid-sweep routing changes.</p></div>
+</section>
+
+<!-- ================================================================ S9 -->
+<section id="implications">
+<h2><span class="num">&sect;9</span>What this means</h2>
+<p class="lede">Eight concrete takeaways, ordered by how actionable they are.</p>
+
+<figure class="data-fig">
+<figcaption class="figcap-inline"><span class="fig-num">fig. 8</span><span class="fig-title">local scaling exponent &alpha; vs prompt size</span><span class="fig-meta">log x &middot; linear y &middot; &alpha; between adjacent byte-buckets</span></figcaption>
+<svg class="chart" data-chart="alpha" aria-label="Scaling exponent chart"></svg>
+<p class="fig-caption">The dotted line at &alpha; = 1.0 marks linear scaling. <em>gpt-4.1-nano</em> (red) crosses super-linear at 601 KB (&alpha; = 1.64). <em>Gemini Lite</em> (green) plunges to &alpha; = &minus;0.64. The exponent is not a constant &mdash; it changes at routing boundaries.</p>
+</figure>
+
+<div class="finding"><h4><span class="f-num">1</span>Model selection must be context-length-aware</h4><p>There is no single fastest model. gpt-4.1-nano wins below ~64 KB; gpt-5.4-mini wins at 64&ndash;400 KB; gemini-3.1-flash-lite wins above 400 KB. A routing layer that selects model by input size would outperform any single model by 1.5&ndash;2.5&times;.</p></div>
+
+<div class="finding"><h4><span class="f-num">2</span>OpenAI decode cost makes long-context generation expensive</h4><p>At 1 MB context, gpt-5.4-mini spends 76% of wall time on decode &mdash; 10.4 s for 100 tokens. Gemini Lite spends 12% &mdash; 240 ms for 96 tokens.</p></div>
+
+<div class="finding"><h4><span class="f-num">3</span>Context windows are content-dependent</h4><p>Random/high-entropy content consumes 2.5&ndash;3.8&times; more tokens per byte. Applications ingesting base64, hex, or compressed data should expect to hit limits much sooner.</p></div>
+
+<div class="finding"><h4><span class="f-num">4</span>Gemini Lite's long-context route is qualitatively different</h4><p>Negative prefill scaling, simultaneously dropping decode cost, and a total time that is faster at 601 KB than 256 KB &mdash; all three together point to a routing transition near ~100k tokens to a fundamentally different compute environment.</p></div>
+
+<div class="finding"><h4><span class="f-num">5</span>Tokenizer choice is architecture, not preprocessing</h4><p>The same tokenizer across 5 OpenAI generations means embedding tables and KV caches are locked to one vocabulary. Anthropic's more efficient tokenizer compounds &mdash; fewer tokens means fewer operations and lower cost.</p></div>
+
+<div class="finding"><h4><span class="f-num">6</span>The compliance boundary is universal</h4><p>A perfectly bimodal 50/50 output distribution across 7 models and 3 providers suggests a convergent property of instruction-tuned models at the refuse/comply boundary. The boundary is a knife-edge tie that a small perturbation can tip.</p></div>
+
+<div class="finding"><h4><span class="f-num">7</span>Gemini 2.5 Flash has a long-context output suppression</h4><p>Unlike its newer siblings, 2.5 Flash voluntarily truncates open-ended output past 256 KB. This was reversed in the 3.x generation.</p></div>
+
+<div class="finding"><h4><span class="f-num">8</span>Scaling exponents are not fixed properties of a model</h4><p>Local &alpha; varies by 0.5&ndash;1.0 across size regimes. Gemini Lite: &alpha; = 0.35 at 64&ndash;128 KB, &alpha; = &minus;0.64 at 400&ndash;601 KB. gpt-4.1-nano: &alpha; = 0.25 at 32&ndash;64 KB, &alpha; = 1.64 at 601&ndash;801 KB. The interesting signal is where the exponent <em>changes</em>.</p></div>
+</section>
+
+<footer class="colophon">
+<span>attention &mdash; researcher findings &middot; 2026-05-13</span>
+<span><a href="/">interactive viewer &rarr;</a></span>
+</footer>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const cv=n=>getComputedStyle(document.body).getPropertyValue(n).trim();
+const FONT='"Space Mono",monospace';
+function el(tag,attrs={},text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;return e}
+function fmtN(v){if(v>=1e6)return(v/1e6).toFixed(v>=1e7?0:1).replace(/\.0$/,'')+'M';if(v>=1e3)return(v/1e3).toFixed(v>=1e4?0:1).replace(/\.0$/,'')+'k';if(Number.isInteger(v))return String(v);return v.toFixed(v<1?2:1)}
+function logTicks(lo,hi){const out=[];for(let p=Math.floor(Math.log10(lo));p<=Math.ceil(Math.log10(hi));p++){const v=Math.pow(10,p);if(v>=lo*0.99&&v<=hi*1.01)out.push(v)}return out}
+function linearTicks(lo,hi,want=6){const range=hi-lo,raw=range/want,mag=Math.pow(10,Math.floor(Math.log10(raw))),norm=raw/mag,step=(norm<1.5?1:norm<3?2:norm<7?5:10)*mag,ticks=[];for(let v=Math.ceil(lo/step)*step;v<=hi+1e-9;v+=step)ticks.push(Number(v.toFixed(10)));return ticks}
+
+function drawChart(svg,opts){
+  const W=700,H=opts.height||380;
+  const M=Object.assign({t:18,r:22,b:86,l:64},opts.margin||{});
+  const series=opts.series,xType=opts.xType||'log',yType=opts.yType||'log';
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  const allX=series.flatMap(s=>s.points.map(p=>p[0])),allY=series.flatMap(s=>s.points.map(p=>p[1]));
+  let xLo=Math.min(...allX),xHi=Math.max(...allX),yLo=Math.min(...allY),yHi=Math.max(...allY);
+  if(opts.xRange){xLo=opts.xRange[0];xHi=opts.xRange[1]}if(opts.yRange){yLo=opts.yRange[0];yHi=opts.yRange[1]}
+  if(xType==='log'){xLo*=0.85;xHi*=1.18}else{const d=xHi-xLo;xLo-=d*0.04;xHi+=d*0.06}
+  if(yType==='log'){yLo*=0.78;yHi*=1.30}else{const d=yHi-yLo;yLo=Math.max(yLo-d*0.08,opts.yFloor!=null?opts.yFloor:0);yHi+=d*0.14}
+  const xv=xType==='log'?Math.log10:v=>v,yv=yType==='log'?Math.log10:v=>v;
+  const xL=xv(xLo),xH=xv(xHi),yL=yv(yLo),yH=yv(yHi);
+  const X=v=>M.l+((xv(v)-xL)/(xH-xL))*(W-M.l-M.r),Y=v=>H-M.b-((yv(v)-yL)/(yH-yL))*(H-M.t-M.b);
+  const ink=cv('--ink'),inkSoft=cv('--ink-soft'),ruleS=cv('--rule-soft'),accent=cv('--accent');
+  for(const b of(opts.bands||[])){const x0=X(b.x0),x1=X(b.x1);svg.appendChild(el('rect',{x:x0,y:M.t,width:Math.max(2,x1-x0),height:H-M.t-M.b,fill:b.color||accent,opacity:'0.08'}));if(b.label)svg.appendChild(el('text',{x:(x0+x1)/2,y:M.t-5,'text-anchor':'middle','font-family':FONT,'font-size':'9','letter-spacing':'0.04em','font-weight':'700',fill:b.color||accent},b.label.toUpperCase()))}
+  // reference lines
+  for(const rl of(opts.refLines||[])){const y=Y(rl.value);svg.appendChild(el('line',{x1:M.l,x2:W-M.r,y1:y,y2:y,stroke:rl.color||cv('--muted'),'stroke-width':'1','stroke-dasharray':'4,4'}));if(rl.label)svg.appendChild(el('text',{x:W-M.r+4,y:y+3.5,'font-family':FONT,'font-size':'9','font-weight':'700',fill:rl.color||cv('--muted')},rl.label))}
+  const xTicks=xType==='log'?logTicks(xLo,xHi):linearTicks(xLo,xHi),yTicks=yType==='log'?logTicks(yLo,yHi):linearTicks(yLo,yHi);
+  for(const t of xTicks)svg.appendChild(el('line',{x1:X(t),x2:X(t),y1:M.t,y2:H-M.b,stroke:ruleS,'stroke-width':'0.6'}));
+  for(const t of yTicks)svg.appendChild(el('line',{x1:M.l,x2:W-M.r,y1:Y(t),y2:Y(t),stroke:ruleS,'stroke-width':'0.6'}));
+  svg.appendChild(el('path',{d:`M ${M.l} ${M.t} L ${M.l} ${H-M.b} L ${W-M.r} ${H-M.b}`,fill:'none',stroke:ink,'stroke-width':'1'}));
+  for(const t of xTicks){svg.appendChild(el('line',{x1:X(t),x2:X(t),y1:H-M.b,y2:H-M.b+4,stroke:ink,'stroke-width':'1'}));svg.appendChild(el('text',{x:X(t),y:H-M.b+16,'text-anchor':'middle','font-family':FONT,'font-size':'9.5',fill:inkSoft},fmtN(t)))}
+  for(const t of yTicks){svg.appendChild(el('line',{x1:M.l-4,x2:M.l,y1:Y(t),y2:Y(t),stroke:ink,'stroke-width':'1'}));svg.appendChild(el('text',{x:M.l-7,y:Y(t)+3.5,'text-anchor':'end','font-family':FONT,'font-size':'9.5',fill:inkSoft},fmtN(t)))}
+  if(opts.xLabel)svg.appendChild(el('text',{x:M.l+(W-M.l-M.r)/2,y:H-M.b+38,'text-anchor':'middle','font-family':FONT,'font-size':'9.5','letter-spacing':'0.04em','font-weight':'700',fill:ink},opts.xLabel.toUpperCase()));
+  if(opts.yLabel){const cy=M.t+(H-M.t-M.b)/2;svg.appendChild(el('text',{x:0,y:0,'text-anchor':'middle','font-family':FONT,'font-size':'9.5','letter-spacing':'0.04em','font-weight':'700',fill:ink,transform:`translate(${M.l-46},${cy}) rotate(-90)`},opts.yLabel.toUpperCase()))}
+  for(const s of series){const pts=s.points.slice().sort((a,b)=>a[0]-b[0]);if(!s.scatter){let d='';pts.forEach((p,i)=>{d+=(i?' L ':'M ')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)});svg.appendChild(el('path',{d,fill:'none',stroke:s.color,'stroke-width':s.strokeWidth||'1.6','stroke-linecap':'round','stroke-linejoin':'round','stroke-dasharray':s.dash||'none'}))}for(const p of pts)svg.appendChild(el('circle',{cx:X(p[0]),cy:Y(p[1]),r:s.scatter?'3':'2.5',fill:s.color,opacity:s.scatter?'0.55':'1'}))}
+  for(const a of(opts.annotations||[]))svg.appendChild(el('text',{x:X(a.x)+(a.dx||0),y:Y(a.y)+(a.dy||0),'text-anchor':a.anchor||'start','font-family':FONT,'font-size':String(a.fontSize||11),'font-weight':'700',fill:a.color||ink},a.text));
+  let lx=M.l,ly=H-18;for(const s of series){const w=6.5*s.name.length+24;if(lx+w>W-M.r&&lx>M.l){lx=M.l;ly+=16}svg.appendChild(el('rect',{x:lx,y:ly-8,width:9,height:9,fill:s.color}));svg.appendChild(el('text',{x:lx+14,y:ly,'font-family':FONT,'font-size':'10',fill:ink},s.name));lx+=w}
+}
+
+function drawBarChart(svg,opts){
+  const W=700,H=opts.height||280,M=Object.assign({t:22,r:22,b:50,l:54},opts.margin||{});
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  const ink=cv('--ink'),inkSoft=cv('--ink-soft'),ruleS=cv('--rule-soft');
+  const groups=opts.groups,maxVal=opts.yMax||Math.max(...groups.flatMap(g=>g.bars.map(b=>b.value)))*1.15;
+  const plotW=W-M.l-M.r,plotH=H-M.t-M.b,groupW=plotW/groups.length;
+  const barW=Math.min(28,(groupW-12)/groups[0].bars.length);
+  const Y=v=>M.t+plotH*(1-v/maxVal);
+  const ticks=linearTicks(0,maxVal,5);
+  for(const t of ticks){svg.appendChild(el('line',{x1:M.l,x2:W-M.r,y1:Y(t),y2:Y(t),stroke:ruleS,'stroke-width':'0.6'}));svg.appendChild(el('text',{x:M.l-7,y:Y(t)+3.5,'text-anchor':'end','font-family':FONT,'font-size':'9.5',fill:inkSoft},fmtN(t)))}
+  svg.appendChild(el('path',{d:`M ${M.l} ${M.t} L ${M.l} ${H-M.b} L ${W-M.r} ${H-M.b}`,fill:'none',stroke:ink,'stroke-width':'1'}));
+  if(opts.yLabel){const cy=M.t+plotH/2;svg.appendChild(el('text',{x:0,y:0,'text-anchor':'middle','font-family':FONT,'font-size':'9.5','letter-spacing':'0.04em','font-weight':'700',fill:ink,transform:`translate(${M.l-38},${cy}) rotate(-90)`},opts.yLabel.toUpperCase()))}
+  groups.forEach((g,gi)=>{const gx=M.l+gi*groupW+groupW/2;const tw=g.bars.length*barW+(g.bars.length-1)*3;let bx=gx-tw/2;g.bars.forEach(b=>{const h=plotH*(b.value/maxVal);svg.appendChild(el('rect',{x:bx,y:Y(b.value),width:barW,height:h,fill:b.color,rx:'1'}));svg.appendChild(el('text',{x:bx+barW/2,y:Y(b.value)-4,'text-anchor':'middle','font-family':FONT,'font-size':'9','font-weight':'700',fill:b.color},b.value.toFixed(2)));bx+=barW+3});svg.appendChild(el('text',{x:gx,y:H-M.b+16,'text-anchor':'middle','font-family':FONT,'font-size':'9',fill:ink},g.label))});
+  const li=opts.legend||[];let lx=M.l,ly=H-6;li.forEach(item=>{const w=6.5*item.name.length+24;if(lx+w>W-M.r&&lx>M.l){lx=M.l;ly+=14}svg.appendChild(el('rect',{x:lx,y:ly-7,width:9,height:9,fill:item.color}));svg.appendChild(el('text',{x:lx+14,y:ly+1,'font-family':FONT,'font-size':'9.5',fill:ink},item.name));lx+=w})
+}
+
+/* ---- DATA ---- */
+const CROSSOVER={
+  'gemini-3.1-flash-lite':[[.25,503],[1,463],[2,498],[4,517],[8,496],[16,554],[32,633],[64,733],[128,935],[256,1181],[400,1181],[601,912],[801,1108],[1001,1732]],
+  'gpt-4.1-nano':[[.25,176],[1,220],[2,180],[4,198],[8,229],[16,242],[32,302],[64,359],[128,513],[256,882],[400,1220],[601,1730],[801,2772],[1001,4876]],
+  'gpt-5.4-mini':[[.25,233],[1,226],[2,253],[4,259],[8,224],[16,266],[32,316],[64,349],[128,521],[256,779],[400,996],[601,1376],[801,1662],[1001,2044]],
+  'claude-haiku-4-5':[[.25,391],[1,410],[2,414],[4,446],[8,519],[16,465],[32,543],[64,608],[128,817],[256,1231],[400,1755],[601,2229]],
+  'gemini-3-flash-preview':[[.25,492],[1,498],[2,512],[4,562],[8,652],[16,594],[32,663],[64,911],[128,1025],[256,1268],[400,1690],[601,2127],[801,3810],[1001,2861]],
+  'gemini-2.5-flash':[[.25,289],[1,330],[2,349],[4,334],[8,489],[16,414],[32,524],[64,590],[128,799],[256,2290],[400,3335],[601,2482],[801,3499],[1001,4650]],
+};
+const DECODE_DIV={
+  'gemini-3.1-flash-lite':[[.25,4.6],[2,4.6],[4,5.2],[8,5.3],[16,4.5],[32,4.3],[64,3.9],[128,4.7],[256,4.8],[400,4.8],[601,3.3],[801,2.6],[1001,3.3]],
+  'gpt-5.4-mini':[[.25,7.1],[2,6.7],[4,7.4],[8,7.5],[16,14.2],[32,7.5],[64,34.8],[128,9.1],[256,8.9],[400,13.2],[601,31.8],[801,57.6],[1001,108.4]],
+  'gpt-4.1-nano':[[.25,14.1],[2,9.7],[4,14.8],[8,12.3],[16,8.7],[32,21.2],[64,12.7],[128,12],[256,18.3],[400,17.8],[601,17.7],[801,28.4],[1001,67.5]],
+  'claude-haiku-4-5':[[.25,11.8],[2,11.5],[4,12.6],[8,11.8],[16,18.8],[32,13.1],[64,12.6],[128,11.1],[256,11],[400,10.9],[601,12.5]],
+  'gpt-4o-mini':[[.25,18.5],[2,12.5],[4,14.1],[8,11.8],[16,13.9],[32,26.8],[64,35],[128,31.9],[256,34.6],[400,54.8]],
+};
+const THROUGHPUT={
+  'gemini-3.1-flash-lite':[[.25,522],[1,507],[2,959],[4,1773],[8,3889],[16,6938],[32,12344],[64,21514],[128,33268],[256,52823],[400,82239],[601,157585],[801,179310],[1001,184100]],
+  'gpt-5.4-mini':[[.25,1034],[1,1048],[2,1897],[4,3509],[8,8383],[16,13875],[32,23360],[64,42810],[128,56746],[256,75725],[400,92414],[601,99380],[801,109598],[1001,111238]],
+  'gpt-4.1-nano':[[.25,1363],[1,1081],[2,2672],[4,4595],[8,8205],[16,15260],[32,24450],[64,41623],[128,57631],[256,66880],[400,75448],[601,79045],[801,65711],[1001,67091]],
+  'claude-haiku-4-5':[[.25,685],[1,641],[2,1292],[4,2273],[8,4111],[16,9047],[32,15432],[64,28013],[128,41051],[256,54273],[400,59473],[601,69100]],
+  'gemini-3-flash-preview':[[.25,480],[1,471],[2,933],[4,1631],[8,2958],[16,6471],[32,11785],[64,17310],[128,30347],[256,54586],[400,64620],[601,67567],[801,50216],[1001,83330]],
+};
+const PREFILL_FRAC={
+  'gemini-3.1-flash-lite':[[.25,55.2],[2,57.3],[4,49.6],[8,48.7],[16,57.6],[32,62.1],[64,68.6],[128,62.1],[256,69.3],[400,73.8],[601,79.4],[801,78.2],[1001,87.8]],
+  'gpt-5.4-mini':[[.25,25.7],[2,33.9],[4,29.5],[8,31.5],[16,28.6],[32,30],[64,34.4],[128,42.9],[256,59.1],[400,52.6],[601,41.9],[801,34],[1001,24.4]],
+  'gpt-4.1-nano':[[.25,32],[2,16.4],[4,45.6],[8,17.5],[16,37.5],[32,29.5],[64,43.6],[128,38.8],[256,32.2],[400,65.6],[601,69.2],[801,56.2],[1001,40.3]],
+  'claude-haiku-4-5':[[.25,26.7],[2,27.4],[4,26.7],[8,33.1],[16,25.7],[32,32.3],[64,31.3],[128,40.1],[256,52.5],[400,62.6],[601,66.8]],
+  'gemini-3-flash-preview':[[.25,42.3],[2,44.4],[4,44.3],[8,52.5],[16,56.7],[32,52],[64,53.7],[128,57.8],[256,61],[400,69.3],[601,83.4],[801,72.3],[1001,77.5]],
+};
+const ALPHA={
+  'gemini-3.1-flash-lite':[[2,.105],[4,.054],[8,-.06],[16,.16],[32,.192],[64,.212],[128,.351],[256,.331],[400,.01],[601,-.635],[801,.546]],
+  'gpt-5.4-mini':[[2,.163],[4,.034],[8,-.209],[16,.248],[32,.248],[64,.143],[128,.578],[256,.58],[400,.551],[601,.794],[801,.657]],
+  'gpt-4.1-nano':[[2,-.29],[4,.138],[8,.21],[16,.08],[32,.32],[64,.249],[128,.515],[256,.782],[400,.727],[601,.858],[801,1.641]],
+  'claude-haiku-4-5':[[2,.014],[4,.107],[8,.219],[16,-.159],[32,.224],[64,.163],[128,.426],[256,.591],[400,.795],[601,.587]],
+  'gemini-2.5-flash':[[2,-.225],[4,-.068],[8,.342],[16,-.028],[32,.334],[64,.177],[128,.437],[256,1.112],[400,1.313],[601,-.548],[801,.832]],
+};
+const LITE_SCATTER=[
+  [256,1181],[256,1288],[256,1454],[256,1484],[256,1567],[256,1644],[256,1726],[256,2072],[256,2667],
+  [256,1176],[256,1236],[256,1292],[256,1390],[256,1615],[256,2349],
+  [400,1181],[400,1285],[400,1351],[400,1497],[400,1552],[400,1635],[400,2110],[400,2978],[400,6809],
+  [400,1498],[400,1568],[400,1607],[400,1743],[400,1815],[400,2194],
+  [601,912],[601,946],[601,1011],[601,1073],[601,1224],[601,1296],[601,1349],[601,1352],[601,1653],
+  [601,921],[601,977],[601,1195],[601,1252],[601,1460],[601,1654],
+  [801,1108],[801,1399],[801,1763],[801,1067],[801,1171],[801,1531],[801,1549],[801,1560],[801,1815],
+];
+const OUTPUT_COLLAPSE=[[.25,100],[2,99],[4,100],[8,100],[16,101],[32,100],[64,100],[128,100],[256,38],[400,39],[601,38],[801,46],[1001,39]];
+
+/* ---- RENDER ---- */
+function renderAll(){
+  const mk=(name,color,data)=>({name,color:cv(color),points:data});
+
+  // fig.1 tokenizer bars
+  const ftok=document.querySelector('svg[data-chart="tokenizer"]');
+  if(ftok)drawBarChart(ftok,{height:260,yLabel:'bytes / token',yMax:5,
+    groups:[
+      {label:'Gemini',bars:[{value:4.13,color:cv('--d4')},{value:1.16,color:cv('--d9')}]},
+      {label:'OpenAI',bars:[{value:4.35,color:cv('--d6')},{value:1.64,color:cv('--d1')}]},
+      {label:'Anthropic',bars:[{value:3.83,color:cv('--d8')},{value:1.55,color:cv('--d7')}]},
+    ],
+    legend:[{name:'structured text',color:cv('--d4')},{name:'random hex',color:cv('--d9')}],
+  });
+
+  // fig.2 crossover
+  const f2=document.querySelector('svg[data-chart="crossover"]');
+  if(f2)drawChart(f2,{height:400,xType:'log',yType:'log',xLabel:'prompt size (KB)',yLabel:'ttft floor (ms)',
+    series:[mk('gemini-3.1-flash-lite','--d3',CROSSOVER['gemini-3.1-flash-lite']),mk('gpt-5.4-mini','--d6',CROSSOVER['gpt-5.4-mini']),mk('gpt-4.1-nano','--d2',CROSSOVER['gpt-4.1-nano']),mk('claude-haiku-4-5','--d8',CROSSOVER['claude-haiku-4-5']),mk('gemini-3-flash-preview','--d4',CROSSOVER['gemini-3-flash-preview']),mk('gemini-2.5-flash','--d5',CROSSOVER['gemini-2.5-flash'])],
+    bands:[{x0:200,x1:500,label:'crossover zone',color:cv('--d4')}],
+  });
+
+  // fig.3 throughput
+  const f3=document.querySelector('svg[data-chart="throughput"]');
+  if(f3)drawChart(f3,{height:380,xType:'log',yType:'log',xLabel:'prompt size (KB)',yLabel:'tokens / sec',
+    series:[mk('gemini-3.1-flash-lite','--d3',THROUGHPUT['gemini-3.1-flash-lite']),mk('gpt-5.4-mini','--d6',THROUGHPUT['gpt-5.4-mini']),mk('gpt-4.1-nano','--d2',THROUGHPUT['gpt-4.1-nano']),mk('claude-haiku-4-5','--d8',THROUGHPUT['claude-haiku-4-5']),mk('gemini-3-flash-preview','--d4',THROUGHPUT['gemini-3-flash-preview'])],
+    annotations:[{x:1001,y:184100,text:'184k',anchor:'end',fontSize:10,color:cv('--d3'),dx:-5,dy:-8},{x:1001,y:111238,text:'111k',anchor:'end',fontSize:10,color:cv('--d6'),dx:-5,dy:-8}],
+  });
+
+  // fig.4 lite scatter
+  const f4=document.querySelector('svg[data-chart="lite-scatter"]');
+  if(f4)drawChart(f4,{height:350,xType:'linear',yType:'linear',xLabel:'prompt size (KB)',yLabel:'ttft (ms)',yFloor:0,
+    series:[{name:'gemini-3.1-flash-lite',color:cv('--d3'),points:LITE_SCATTER,scatter:true}],
+    annotations:[{x:601,y:912,text:'912 ms floor',anchor:'start',fontSize:10,color:cv('--d3'),dx:5,dy:-8},{x:400,y:6809,text:'routing miss?',anchor:'end',fontSize:9,color:cv('--warn'),dx:-5,dy:-5}],
+  });
+
+  // fig.5 decode divergence
+  const f5=document.querySelector('svg[data-chart="decode-div"]');
+  if(f5)drawChart(f5,{height:380,xType:'log',yType:'log',xLabel:'prompt size (KB)',yLabel:'decode ms / token',
+    series:[mk('gemini-3.1-flash-lite','--d3',DECODE_DIV['gemini-3.1-flash-lite']),mk('gpt-5.4-mini','--d6',DECODE_DIV['gpt-5.4-mini']),mk('gpt-4.1-nano','--d2',DECODE_DIV['gpt-4.1-nano']),mk('claude-haiku-4-5','--d8',DECODE_DIV['claude-haiku-4-5']),mk('gpt-4o-mini','--d7',DECODE_DIV['gpt-4o-mini'])],
+    annotations:[{x:1001,y:108,text:'108 ms/tok',anchor:'end',fontSize:10,color:cv('--d6'),dx:-5,dy:-8},{x:1001,y:3.3,text:'3.3 ms/tok',anchor:'end',fontSize:10,color:cv('--d3'),dx:-5,dy:14}],
+  });
+
+  // fig.6 prefill fraction
+  const f6=document.querySelector('svg[data-chart="prefill-frac"]');
+  if(f6)drawChart(f6,{height:340,xType:'log',yType:'linear',xLabel:'prompt size (KB)',yLabel:'prefill % of total',yFloor:0,
+    series:[mk('gemini-3.1-flash-lite','--d3',PREFILL_FRAC['gemini-3.1-flash-lite']),mk('gpt-5.4-mini','--d6',PREFILL_FRAC['gpt-5.4-mini']),mk('gpt-4.1-nano','--d2',PREFILL_FRAC['gpt-4.1-nano']),mk('claude-haiku-4-5','--d8',PREFILL_FRAC['claude-haiku-4-5']),mk('gemini-3-flash-preview','--d4',PREFILL_FRAC['gemini-3-flash-preview'])],
+    annotations:[{x:1001,y:87.8,text:'88%',anchor:'end',fontSize:11,color:cv('--d3'),dx:-5,dy:-8},{x:1001,y:24.4,text:'24%',anchor:'end',fontSize:11,color:cv('--d6'),dx:-5,dy:14}],
+  });
+
+  // fig.7 output collapse
+  const f7=document.querySelector('svg[data-chart="output-collapse"]');
+  if(f7)drawChart(f7,{height:280,xType:'log',yType:'linear',xLabel:'prompt size (KB)',yLabel:'output tokens',yFloor:0,
+    series:[{name:'gemini-2.5-flash',color:cv('--d5'),points:OUTPUT_COLLAPSE}],
+    bands:[{x0:200,x1:1100,label:'collapse zone',color:cv('--warn')}],
+    annotations:[{x:128,y:100,text:'100 tok',anchor:'end',fontSize:10,color:cv('--d5'),dx:-5,dy:-8},{x:256,y:38,text:'~37 tok',anchor:'start',fontSize:10,color:cv('--warn'),dx:5,dy:14}],
+  });
+
+  // fig.8 alpha
+  const f8=document.querySelector('svg[data-chart="alpha"]');
+  if(f8)drawChart(f8,{height:380,margin:{t:18,r:36,b:86,l:64},xType:'log',yType:'linear',xLabel:'prompt size (KB)',yLabel:'local α',yFloor:-1,
+    series:[mk('gemini-3.1-flash-lite','--d3',ALPHA['gemini-3.1-flash-lite']),mk('gpt-5.4-mini','--d6',ALPHA['gpt-5.4-mini']),mk('gpt-4.1-nano','--d2',ALPHA['gpt-4.1-nano']),mk('claude-haiku-4-5','--d8',ALPHA['claude-haiku-4-5']),mk('gemini-2.5-flash','--d5',ALPHA['gemini-2.5-flash'])],
+    refLines:[{value:1.0,label:'α=1',color:cv('--warn')},{value:0,label:'α=0',color:cv('--muted')}],
+    annotations:[{x:601,y:-0.635,text:'-0.64',anchor:'start',fontSize:10,color:cv('--d3'),dx:5,dy:-8},{x:801,y:1.641,text:'1.64',anchor:'start',fontSize:10,color:cv('--d2'),dx:5,dy:-8}],
+  });
+}
+
+function ready(){if(document.fonts&&document.fonts.ready)document.fonts.ready.then(renderAll);else renderAll()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready);else ready();
+</script>
+</body>
+</html>

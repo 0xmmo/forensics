@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>attention - expert researcher findings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #111111;
+    --ink-soft: #444444;
+    --muted: #888888;
+    --rule: #dddddd;
+    --rule-soft: #eeeeee;
+    --link: #2563eb;
+    --accent: #16a34a;
+    --warn: #dc2626;
+    --code-bg: #f4f4f4;
+
+    --d1: #2563eb;
+    --d2: #dc2626;
+    --d3: #16a34a;
+    --d4: #d97706;
+    --d5: #7c3aed;
+    --d6: #0891b2;
+    --d7: #db2777;
+    --d8: #4b5563;
+    --d9: #059669;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: "Space Mono", ui-monospace, monospace;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 2rem;
+  }
+  .wordmark { font-size: 1.5rem; font-weight: 700; color: var(--ink); }
+  .tagline { color: var(--muted); font-size: 0.8rem; flex: 1; min-width: 0; }
+  .nav {
+    display: flex; gap: 0.85rem; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .nav a { color: var(--muted); }
+  .nav a:hover { color: var(--ink); text-decoration: none; }
+  .nav a.active { color: var(--ink); font-weight: 700; }
+
+  .article-head { margin-bottom: 2rem; }
+  .article-head .title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; }
+  .article-head .dek { margin-bottom: 1rem; }
+  .article-head .meta {
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem;
+    font-size: 0.8rem; color: var(--muted);
+    padding-top: 0.5rem; border-top: 1px solid var(--rule-soft);
+  }
+  .article-head .meta dt {
+    display: inline; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--ink); margin-right: 0.4rem;
+  }
+  .article-head .meta dd { display: inline; margin-right: 0.5rem; }
+
+  .toc {
+    margin: 0 0 2.5rem; padding: 1rem 0;
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  }
+  .toc-label {
+    font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 0.75rem;
+  }
+  .toc ol {
+    list-style: none;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0.3rem 1.5rem; counter-reset: toc;
+  }
+  .toc li { counter-increment: toc; }
+  .toc li::before { content: '\A7' counter(toc) '. '; color: var(--muted); margin-right: 0.25rem; }
+  .toc a { color: var(--ink); }
+  .toc a:hover { color: var(--link); text-decoration: none; }
+
+  section { margin-bottom: 2.6rem; }
+  h2 {
+    font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 1rem;
+    border-bottom: 1px solid var(--rule); padding-bottom: 0.5rem;
+  }
+  h2 .num { color: var(--muted); margin-right: 0.5rem; }
+  h3 {
+    font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; margin: 1.5rem 0 0.75rem;
+  }
+  p { margin-bottom: 1rem; }
+  .lede { color: var(--muted); margin-bottom: 1rem; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+
+  code {
+    font-family: inherit; font-size: 0.95em;
+    background: var(--code-bg); padding: 1px 5px; border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  table {
+    border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: 0.8rem;
+  }
+  th, td {
+    text-align: right; padding: 0.45rem 0.7rem 0.45rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  thead th {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--ink);
+    border-bottom: 1px solid var(--rule); padding-bottom: 0.45rem;
+  }
+  th:first-child, td:first-child { text-align: left; padding-right: 1rem; white-space: nowrap; }
+  table caption {
+    text-align: left; font-size: 0.7rem; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--muted); padding-bottom: 0.4rem;
+  }
+  table caption .tab { color: var(--ink); font-weight: 700; margin-right: 0.6rem; }
+  tbody tr:hover td { background: var(--code-bg); }
+  td.hi { color: var(--accent); font-weight: 700; }
+  td.warn { color: var(--warn); font-weight: 700; }
+  td.dim { color: var(--muted); }
+  .swatch {
+    display: inline-block; width: 0.65em; height: 0.65em;
+    background: currentColor; margin-right: 0.55em; vertical-align: -1px;
+  }
+
+  .data-fig {
+    margin: 1.5rem 0 2rem; padding: 1rem 0;
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  }
+  .figcap-inline {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline;
+    margin-bottom: 0.85rem; padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule-soft);
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .figcap-inline .fig-num { color: var(--muted); }
+  .figcap-inline .fig-title { color: var(--ink); font-weight: 700; flex: 1; min-width: 0; }
+  .figcap-inline .fig-meta { color: var(--muted); text-align: right; }
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .fig-caption { color: var(--ink); font-size: 0.85rem; line-height: 1.5; margin-top: 0.75rem; }
+
+  .finding {
+    border-top: 1px solid var(--rule-soft); padding: 1rem 0;
+  }
+  .finding h4 {
+    font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 0.6rem;
+  }
+  .finding h4 .f-num { color: var(--muted); margin-right: 0.5rem; }
+  .finding .test::before {
+    content: 'test - '; color: var(--d5); text-transform: uppercase;
+    letter-spacing: 0.04em; font-weight: 700; font-size: 0.75rem;
+  }
+
+  ul { padding-left: 1.5rem; margin: 0 0 1rem; list-style: none; }
+  ul li { margin-bottom: 0.5rem; position: relative; }
+  ul li::before { content: '*'; position: absolute; left: -1.25rem; color: var(--muted); }
+
+  .colophon {
+    margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule);
+    display: flex; justify-content: space-between; flex-wrap: wrap;
+    gap: 0.5rem 1rem; color: var(--muted); font-size: 0.8rem;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 2rem 1rem 3rem; }
+    .toc ol { grid-template-columns: 1fr; }
+    .article-head .title { font-size: 1.25rem; }
+    th:first-child, td:first-child { white-space: normal; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="masthead">
+    <a href="/" class="wordmark">attention</a>
+    <span class="tagline">llm prefill scaling observatory</span>
+    <nav class="nav">
+      <a href="/">viewer</a>
+      <a href="/findings">field notes</a>
+      <a href="/research">research</a>
+      <a href="/expert_research" class="active">expert</a>
+    </nav>
+  </header>
+
+  <section class="article-head">
+    <div class="title">Expert Researcher Findings</div>
+    <p class="dek">
+      A chart-first read of 2,068 API calls across nine models, three providers,
+      and three prompt shapes. The findings below are deliberately limited to
+      patterns that are directly visible in charts.
+    </p>
+    <dl class="meta">
+      <dt>Filed</dt><dd>2026-05-13</dd>
+      <dt>Dataset</dt><dd>2,068 recorded calls &middot; 1,903 complete &middot; 9 models</dd>
+      <dt>Method</dt><dd>prefill sweeps &middot; 250 chars to 1M chars &middot; streaming</dd>
+    </dl>
+  </section>
+
+  <nav class="toc" aria-label="contents">
+    <div class="toc-label">Contents</div>
+    <ol>
+      <li><a href="#tokenizers">Tokenizer inflation</a></li>
+      <li><a href="#context-walls">Effective context walls</a></li>
+      <li><a href="#ttft-crossover">Latency rankings invert</a></li>
+      <li><a href="#lite-switch">Gemini Lite regime switch</a></li>
+      <li><a href="#decode-divergence">Decode divergence</a></li>
+      <li><a href="#random-bimodal">Random-output bimodality</a></li>
+      <li><a href="#output-collapse">Gemini 2.5 output collapse</a></li>
+      <li><a href="#needle">Needle retrieval failures</a></li>
+    </ol>
+  </nav>
+
+  <section id="tokenizers">
+    <h2><span class="num">&sect;1</span>Tokenizer inflation</h2>
+    <p class="lede">
+      Same bytes, very different token counts. Random hex content separates the
+      tokenizers more clearly than natural text does.
+    </p>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 1</span>
+        <span class="fig-title">bytes per token by provider family</span>
+        <span class="fig-meta">complete rows &gt; 100 KB &middot; row-weighted average</span>
+      </figcaption>
+      <svg class="chart" data-chart="tokenizer-bpt" aria-label="Bytes per token by provider and prompt type"></svg>
+      <p class="fig-caption">
+        Structured English lands near four bytes per token across all providers.
+        Random hex is the stress case: Gemini falls to <code>1.15</code> bytes/token,
+        OpenAI to <code>1.64</code>, and Anthropic to <code>1.55</code>.
+      </p>
+    </figure>
+
+    <table>
+      <caption><span class="tab">tab. 1</span>Large-context tokenization fingerprint.</caption>
+      <thead>
+        <tr><th>provider family</th><th>structured b/tok</th><th>random b/tok</th><th>structured/random</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="swatch" style="color:var(--d3)"></span>Gemini</td><td>4.16</td><td class="warn">1.15</td><td>3.60&times;</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d6)"></span>OpenAI</td><td>4.37</td><td>1.64</td><td>2.67&times;</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d8)"></span>Anthropic</td><td class="hi">3.85</td><td>1.55</td><td>2.49&times;</td></tr>
+      </tbody>
+    </table>
+
+    <p>
+      The chartable finding is not just that tokenizers differ. It is that
+      high-entropy payloads can inflate token count by roughly <strong>2.5&times; to
+      3.6&times;</strong> relative to structured English, depending on provider family.
+    </p>
+  </section>
+
+  <section id="context-walls">
+    <h2><span class="num">&sect;2</span>Effective context walls</h2>
+    <p class="lede">
+      Context windows are token limits. The usable byte window depends on the content.
+    </p>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 2</span>
+        <span class="fig-title">maximum successful prompt size</span>
+        <span class="fig-meta">KB accepted before limit failures</span>
+      </figcaption>
+      <svg class="chart" data-chart="context-walls" aria-label="Maximum successful prompt size by model and content type"></svg>
+      <p class="fig-caption">
+        The cliff is visible where the random bar is much shorter than the structured
+        bar. GPT-5.4 mini accepts 1 MB of structured text but only 400 KB of random
+        hex. GPT-4o mini accepts 401 KB structured and 128 KB random. GPT-3.5 accepts
+        64 KB structured and 16 KB random.
+      </p>
+    </figure>
+
+    <p>
+      The practical reading: natural-language context-window benchmarks are best-case
+      byte-window measurements. Logs, hex, base64, UUID-heavy traces, and compressed
+      payloads hit limits earlier.
+    </p>
+  </section>
+
+  <section id="ttft-crossover">
+    <h2><span class="num">&sect;3</span>Latency rankings invert</h2>
+    <p class="lede">
+      The fastest model at small context is not the fastest model at long context.
+    </p>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 3</span>
+        <span class="fig-title">TTFT floor vs prompt size</span>
+        <span class="fig-meta">structured prompts &middot; min per byte bucket</span>
+      </figcaption>
+      <svg class="chart" data-chart="crossover" aria-label="TTFT floor crossover by model"></svg>
+      <p class="fig-caption">
+        GPT-4.1 nano has the lowest short-prompt floor, but its curve steepens.
+        GPT-5.4 mini leads the midrange. Gemini 3.1 Flash Lite starts slower,
+        then becomes the fastest model above roughly <code>400 KB</code>.
+      </p>
+    </figure>
+
+    <table>
+      <caption><span class="tab">tab. 2</span>Representative TTFT floor ranks, structured prompts.</caption>
+      <thead>
+        <tr><th>model</th><th>&lt;1 KB</th><th>64 KB</th><th>257 KB</th><th>601 KB</th><th>1 MB</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="swatch" style="color:var(--d2)"></span>gpt-4.1-nano</td><td class="hi">176 ms</td><td>359</td><td>882</td><td>1,730</td><td>3,389</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>233 ms</td><td class="hi">349</td><td class="hi">779</td><td>1,376</td><td>2,044</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>461 ms</td><td>733</td><td>1,176</td><td class="hi">912</td><td class="hi">1,295</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="lite-switch">
+    <h2><span class="num">&sect;4</span>Gemini Lite regime switch</h2>
+    <p class="lede">
+      Gemini 3.1 Flash Lite gets faster when the prompt gets longer between
+      <code>401 KB</code> and <code>601 KB</code>.
+    </p>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 4</span>
+        <span class="fig-title">Gemini Lite negative-scaling zone</span>
+        <span class="fig-meta">song-toads &middot; min TTFT and min total latency</span>
+      </figcaption>
+      <svg class="chart" data-chart="lite-switch" aria-label="Gemini Lite latency regime switch"></svg>
+      <p class="fig-caption">
+        Both TTFT and total request latency dip at <code>601 KB</code>. This is visible
+        without fitting any model: the longer prompt has lower latency.
+      </p>
+    </figure>
+
+    <p>
+      From <code>401 KB</code> to <code>601 KB</code>, prompt tokens rise from about
+      <code>97 k</code> to <code>144 k</code>, while TTFT floor drops from
+      <code>1,181 ms</code> to <code>912 ms</code>. Total latency floor drops from
+      <code>1,601 ms</code> to <code>1,148 ms</code>. The chart is consistent with a
+      serving-route transition near the <code>100 k</code>-token band.
+    </p>
+  </section>
+
+  <section id="decode-divergence">
+    <h2><span class="num">&sect;5</span>Decode divergence</h2>
+    <p class="lede">
+      Long-context latency is not always prefill dominated. For some models, decode
+      becomes the expensive part.
+    </p>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 5</span>
+        <span class="fig-title">decode milliseconds per output token</span>
+        <span class="fig-meta">song-toads &middot; output &ge; 90 tokens</span>
+      </figcaption>
+      <svg class="chart" data-chart="decode-div" aria-label="Decode milliseconds per token by context"></svg>
+      <p class="fig-caption">
+        GPT-5.4 mini rises from single-digit decode cost in the midrange to
+        <code>108 ms/token</code> at 1 MB. Gemini 3.1 Flash Lite stays around
+        <code>3 ms/token</code> at the same size.
+      </p>
+    </figure>
+
+    <p>
+      At 1 MB, the decode gap between GPT-5.4 mini and Gemini Lite is about
+      <strong>33&times;</strong>. For workloads that need long answers after long
+      prompts, this chart matters more than TTFT alone.
+    </p>
+  </section>
+
+  <section id="random-bimodal">
+    <h2><span class="num">&sect;6</span>Random-output bimodality</h2>
+    <p class="lede">
+      On random hex prompts with an instruction appended, successful calls produce
+      either a tiny <code>ok</code>-style response or a near-capped story. No model
+      produces medium-length output.
+    </p>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 6</span>
+        <span class="fig-title">output-length class on random prompts</span>
+        <span class="fig-meta">complete random calls &middot; share of responses</span>
+      </figcaption>
+      <svg class="chart" data-chart="random-bimodal" aria-label="Random prompt output length classes"></svg>
+      <p class="fig-caption">
+        Seven models split exactly <code>50/50</code> between short and long outputs.
+        GPT-4.1 mini and GPT-3.5 produce long outputs on every successful random call.
+        The medium class is empty for all nine models.
+      </p>
+    </figure>
+
+    <p>
+      This is a directly visible behavioral boundary. The random prefix and per-call
+      nonce are enough to flip several deterministic calls between two modes, but not
+      enough to create a continuum of response lengths.
+    </p>
+  </section>
+
+  <section id="output-collapse">
+    <h2><span class="num">&sect;7</span>Gemini 2.5 output collapse</h2>
+    <p class="lede">
+      Gemini 2.5 Flash abruptly stops filling the output budget on open-ended
+      song prompts once context passes <code>256 KB</code>.
+    </p>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 7</span>
+        <span class="fig-title">Gemini song-toads output tokens</span>
+        <span class="fig-meta">average output tokens by prompt size</span>
+      </figcaption>
+      <svg class="chart" data-chart="gemini-output" aria-label="Gemini output tokens by prompt size"></svg>
+      <p class="fig-caption">
+        Gemini 2.5 Flash tracks the newer Gemini models through <code>128 KB</code>,
+        then drops to roughly <code>30-50</code> output tokens. Gemini 3 Flash Preview
+        and Gemini 3.1 Flash Lite remain pinned at the cap.
+      </p>
+    </figure>
+
+    <p>
+      The collapse is not a context-limit failure: the calls complete with
+      <code>STOP</code>. The visible pattern is a generation behavior change specific
+      to the 2.5 Flash model on this open-ended prompt.
+    </p>
+  </section>
+
+  <section id="needle">
+    <h2><span class="num">&sect;8</span>Needle retrieval failures</h2>
+    <p class="lede">
+      The midpoint-needle task is mostly solved, but GPT-4.1 nano visibly degrades
+      at long context.
+    </p>
+
+    <figure class="data-fig">
+      <figcaption class="figcap-inline">
+        <span class="fig-num">fig. 8</span>
+        <span class="fig-title">needle-p50 exact-code accuracy</span>
+        <span class="fig-meta">exact first-line code match</span>
+      </figcaption>
+      <svg class="chart" data-chart="needle-accuracy" aria-label="Needle retrieval accuracy by context"></svg>
+      <p class="fig-caption">
+        The flat top line is the models with no observed misses. GPT-4.1 nano is the
+        outlier, reaching <code>2/6</code> correct at the 1 MB bucket.
+      </p>
+    </figure>
+
+    <table>
+      <caption><span class="tab">tab. 3</span>Needle-p50 exact-code accuracy by model.</caption>
+      <thead>
+        <tr><th>model</th><th>correct</th><th>total</th><th>accuracy</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="swatch" style="color:var(--d3)"></span>gemini-3.1-flash-lite</td><td>90</td><td>90</td><td class="hi">100%</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d4)"></span>gemini-3-flash-preview</td><td>86</td><td>86</td><td class="hi">100%</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d5)"></span>gemini-2.5-flash</td><td>89</td><td>89</td><td class="hi">100%</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d8)"></span>claude-haiku-4-5</td><td>78</td><td>78</td><td class="hi">100%</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d6)"></span>gpt-5.4-mini</td><td>90</td><td>90</td><td class="hi">100%</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d2)"></span>gpt-4.1-nano</td><td>82</td><td>90</td><td class="warn">91%</td></tr>
+        <tr><td><span class="swatch" style="color:var(--d7)"></span>gpt-4o-mini</td><td>71</td><td>72</td><td>99%</td></tr>
+        <tr><td style="color:var(--muted)">gpt-3.5-turbo</td><td>26</td><td>27</td><td>96%</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="next">
+    <h2><span class="num">&sect;9</span>What to test next</h2>
+    <div class="finding">
+      <h4><span class="f-num">1</span>Probe the Gemini Lite switch</h4>
+      <p class="test">
+        Densely sample <code>80 k</code> to <code>160 k</code> Gemini tokens and repeat
+        with both streaming and non-streaming calls. The visible hypothesis is a route
+        or kernel transition near <code>100 k</code> tokens.
+      </p>
+    </div>
+    <div class="finding">
+      <h4><span class="f-num">2</span>Separate prefill from decode</h4>
+      <p class="test">
+        Hold prefix size fixed and sweep <code>max_tokens</code>. The decode chart says
+        GPT-5.4 mini becomes decode-bound at long context; a dedicated decode sweep can
+        quantify that slope cleanly.
+      </p>
+    </div>
+    <div class="finding">
+      <h4><span class="f-num">3</span>Turn the random prompt into a boundary assay</h4>
+      <p class="test">
+        Sweep temperature and random-prefix entropy. The current chart shows a clean
+        short/long split with no middle mass; the next chart should show where that
+        split breaks.
+      </p>
+    </div>
+  </section>
+
+  <footer class="colophon">
+    <span>attention - expert researcher findings &middot; 2026-05-13</span>
+    <span><a href="/">interactive viewer &rarr;</a></span>
+  </footer>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const cv = (n) => getComputedStyle(document.body).getPropertyValue(n).trim();
+const FONT = '"Space Mono", monospace';
+
+function el(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function fmtN(v) {
+  if (v >= 1000) return (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k';
+  if (Math.abs(v) < 10 && !Number.isInteger(v)) return v.toFixed(1);
+  if (Number.isInteger(v)) return String(v);
+  return v.toFixed(0);
+}
+
+function logTicks(lo, hi) {
+  const out = [];
+  for (let p = Math.floor(Math.log10(lo)); p <= Math.ceil(Math.log10(hi)); p++) {
+    const v = Math.pow(10, p);
+    if (v >= lo * 0.99 && v <= hi * 1.01) out.push(v);
+  }
+  return out;
+}
+
+function linearTicks(lo, hi, want = 6) {
+  const range = hi - lo || 1;
+  const raw = range / want;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
+  const ticks = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) {
+    ticks.push(Number(v.toFixed(10)));
+  }
+  return ticks;
+}
+
+function drawLineChart(svg, opts) {
+  const W = 700, H = opts.height ?? 380;
+  const M = Object.assign({ t: 18, r: 22, b: 86, l: 64 }, opts.margin || {});
+  const xType = opts.xType || 'log';
+  const yType = opts.yType || 'log';
+  const series = opts.series;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const allX = series.flatMap(s => s.points.map(p => p[0]));
+  const allY = series.flatMap(s => s.points.map(p => p[1]));
+  let xLo = opts.xRange ? opts.xRange[0] : Math.min(...allX);
+  let xHi = opts.xRange ? opts.xRange[1] : Math.max(...allX);
+  let yLo = opts.yRange ? opts.yRange[0] : Math.min(...allY);
+  let yHi = opts.yRange ? opts.yRange[1] : Math.max(...allY);
+  if (!opts.xRange) {
+    if (xType === 'log') { xLo *= 0.85; xHi *= 1.18; }
+    else { const d = xHi - xLo || 1; xLo -= d * 0.04; xHi += d * 0.06; }
+  }
+  if (!opts.yRange) {
+    if (yType === 'log') { yLo *= 0.78; yHi *= 1.30; }
+    else { const d = yHi - yLo || 1; yLo = Math.max(0, yLo - d * 0.08); yHi += d * 0.14; }
+  }
+
+  const xv = xType === 'log' ? Math.log10 : v => v;
+  const yv = yType === 'log' ? Math.log10 : v => v;
+  const xL = xv(xLo), xH = xv(xHi), yL = yv(yLo), yH = yv(yHi);
+  const X = v => M.l + ((xv(v) - xL) / (xH - xL)) * (W - M.l - M.r);
+  const Y = v => H - M.b - ((yv(v) - yL) / (yH - yL)) * (H - M.t - M.b);
+
+  const ink = cv('--ink');
+  const inkSoft = cv('--ink-soft');
+  const ruleS = cv('--rule-soft');
+
+  for (const b of (opts.bands || [])) {
+    const x0 = X(b.x0), x1 = X(b.x1);
+    svg.appendChild(el('rect', {
+      x: x0, y: M.t, width: Math.max(2, x1 - x0), height: H - M.t - M.b,
+      fill: b.color || cv('--accent'), opacity: '0.08',
+    }));
+    if (b.label) {
+      svg.appendChild(el('text', {
+        x: (x0 + x1) / 2, y: M.t - 5, 'text-anchor': 'middle',
+        'font-family': FONT, 'font-size': '9', 'letter-spacing': '0.04em',
+        'font-weight': '700', fill: b.color || cv('--accent'),
+      }, b.label.toUpperCase()));
+    }
+  }
+
+  const xTicks = xType === 'log' ? logTicks(xLo, xHi) : linearTicks(xLo, xHi);
+  const yTicks = yType === 'log' ? logTicks(yLo, yHi) : linearTicks(yLo, yHi);
+  for (const t of xTicks) svg.appendChild(el('line', { x1: X(t), x2: X(t), y1: M.t, y2: H - M.b, stroke: ruleS, 'stroke-width': '0.6' }));
+  for (const t of yTicks) svg.appendChild(el('line', { x1: M.l, x2: W - M.r, y1: Y(t), y2: Y(t), stroke: ruleS, 'stroke-width': '0.6' }));
+
+  svg.appendChild(el('path', {
+    d: `M ${M.l} ${M.t} L ${M.l} ${H - M.b} L ${W - M.r} ${H - M.b}`,
+    fill: 'none', stroke: ink, 'stroke-width': '1',
+  }));
+
+  for (const t of xTicks) {
+    svg.appendChild(el('line', { x1: X(t), x2: X(t), y1: H - M.b, y2: H - M.b + 4, stroke: ink, 'stroke-width': '1' }));
+    svg.appendChild(el('text', { x: X(t), y: H - M.b + 16, 'text-anchor': 'middle', 'font-family': FONT, 'font-size': '9.5', fill: inkSoft }, fmtN(t)));
+  }
+  for (const t of yTicks) {
+    svg.appendChild(el('line', { x1: M.l - 4, x2: M.l, y1: Y(t), y2: Y(t), stroke: ink, 'stroke-width': '1' }));
+    svg.appendChild(el('text', { x: M.l - 7, y: Y(t) + 3.5, 'text-anchor': 'end', 'font-family': FONT, 'font-size': '9.5', fill: inkSoft }, opts.yFmt ? opts.yFmt(t) : fmtN(t)));
+  }
+
+  if (opts.xLabel) {
+    svg.appendChild(el('text', {
+      x: M.l + (W - M.l - M.r) / 2, y: H - M.b + 38,
+      'text-anchor': 'middle', 'font-family': FONT, 'font-size': '9.5',
+      'letter-spacing': '0.04em', 'font-weight': '700', fill: ink,
+    }, opts.xLabel.toUpperCase()));
+  }
+  if (opts.yLabel) {
+    const cy = M.t + (H - M.t - M.b) / 2;
+    svg.appendChild(el('text', {
+      x: 0, y: 0, 'text-anchor': 'middle', 'font-family': FONT, 'font-size': '9.5',
+      'letter-spacing': '0.04em', 'font-weight': '700', fill: ink,
+      transform: `translate(${M.l - 46}, ${cy}) rotate(-90)`,
+    }, opts.yLabel.toUpperCase()));
+  }
+
+  for (const s of series) {
+    const pts = s.points.slice().sort((a, b) => a[0] - b[0]);
+    let d = '';
+    pts.forEach((p, i) => { d += (i ? ' L ' : 'M ') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1); });
+    svg.appendChild(el('path', {
+      d, fill: 'none', stroke: s.color, 'stroke-width': s.strokeWidth || '1.7',
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-dasharray': s.dash || 'none',
+    }));
+    for (const p of pts) svg.appendChild(el('circle', { cx: X(p[0]), cy: Y(p[1]), r: s.r || '2.5', fill: s.color }));
+  }
+
+  for (const a of (opts.annotations || [])) {
+    svg.appendChild(el('text', {
+      x: X(a.x) + (a.dx || 0), y: Y(a.y) + (a.dy || 0),
+      'text-anchor': a.anchor || 'start', 'font-family': FONT,
+      'font-size': String(a.fontSize || 11), 'font-weight': '700',
+      fill: a.color || ink,
+    }, a.text));
+  }
+
+  let lx = M.l, ly = H - 18;
+  for (const s of series) {
+    const w = 6.4 * s.name.length + 24;
+    if (lx + w > W - M.r && lx > M.l) { lx = M.l; ly += 16; }
+    svg.appendChild(el('rect', { x: lx, y: ly - 8, width: 9, height: 9, fill: s.color }));
+    svg.appendChild(el('text', { x: lx + 14, y: ly, 'font-family': FONT, 'font-size': '10', fill: ink }, s.name));
+    lx += w;
+  }
+}
+
+function drawGroupedBars(svg, opts) {
+  const W = 700, H = opts.height ?? 320;
+  const M = Object.assign({ t: 22, r: 22, b: 72, l: 64 }, opts.margin || {});
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const ink = cv('--ink'), inkSoft = cv('--ink-soft'), ruleS = cv('--rule-soft');
+  const groups = opts.groups;
+  const maxVal = opts.yMax || Math.max(...groups.flatMap(g => g.bars.map(b => b.value))) * 1.15;
+  const plotW = W - M.l - M.r, plotH = H - M.t - M.b;
+  const groupW = plotW / groups.length;
+  const barW = Math.min(opts.barW || 28, (groupW - 10) / groups[0].bars.length);
+  const Y = v => M.t + plotH * (1 - v / maxVal);
+
+  for (const t of linearTicks(0, maxVal, 5)) {
+    svg.appendChild(el('line', { x1: M.l, x2: W - M.r, y1: Y(t), y2: Y(t), stroke: ruleS, 'stroke-width': '0.6' }));
+    svg.appendChild(el('text', { x: M.l - 7, y: Y(t) + 3.5, 'text-anchor': 'end', 'font-family': FONT, 'font-size': '9.5', fill: inkSoft }, opts.yFmt ? opts.yFmt(t) : fmtN(t)));
+  }
+  svg.appendChild(el('path', { d: `M ${M.l} ${M.t} L ${M.l} ${H - M.b} L ${W - M.r} ${H - M.b}`, fill: 'none', stroke: ink, 'stroke-width': '1' }));
+
+  if (opts.yLabel) {
+    const cy = M.t + plotH / 2;
+    svg.appendChild(el('text', { x: 0, y: 0, 'text-anchor': 'middle', 'font-family': FONT, 'font-size': '9.5', 'letter-spacing': '0.04em', 'font-weight': '700', fill: ink, transform: `translate(${M.l - 46}, ${cy}) rotate(-90)` }, opts.yLabel.toUpperCase()));
+  }
+
+  groups.forEach((g, gi) => {
+    const gx = M.l + gi * groupW + groupW / 2;
+    const totalBarW = g.bars.length * barW + (g.bars.length - 1) * 3;
+    let bx = gx - totalBarW / 2;
+    g.bars.forEach(b => {
+      const h = plotH * (b.value / maxVal);
+      svg.appendChild(el('rect', { x: bx, y: Y(b.value), width: barW, height: h, fill: b.color, rx: '1' }));
+      if (opts.valueLabels !== false) {
+        svg.appendChild(el('text', {
+          x: bx + barW / 2, y: Y(b.value) - 4, 'text-anchor': 'middle',
+          'font-family': FONT, 'font-size': '8.5', 'font-weight': '700', fill: b.color,
+        }, opts.valueFmt ? opts.valueFmt(b.value) : fmtN(b.value)));
+      }
+      bx += barW + 3;
+    });
+    svg.appendChild(el('text', { x: gx, y: H - M.b + 15, 'text-anchor': 'middle', 'font-family': FONT, 'font-size': '8.5', fill: ink }, g.label));
+    if (g.sublabel) svg.appendChild(el('text', { x: gx, y: H - M.b + 27, 'text-anchor': 'middle', 'font-family': FONT, 'font-size': '8', fill: inkSoft }, g.sublabel));
+  });
+
+  let lx = M.l, ly = H - 8;
+  for (const item of opts.legend || []) {
+    const w = 6.5 * item.name.length + 24;
+    if (lx + w > W - M.r && lx > M.l) { lx = M.l; ly += 14; }
+    svg.appendChild(el('rect', { x: lx, y: ly - 7, width: 9, height: 9, fill: item.color }));
+    svg.appendChild(el('text', { x: lx + 14, y: ly + 1, 'font-family': FONT, 'font-size': '9.5', fill: ink }, item.name));
+    lx += w;
+  }
+}
+
+function drawStackedBars(svg, opts) {
+  const W = 700, H = opts.height ?? 310;
+  const M = Object.assign({ t: 18, r: 22, b: 88, l: 54 }, opts.margin || {});
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const ink = cv('--ink'), inkSoft = cv('--ink-soft'), ruleS = cv('--rule-soft');
+  const plotW = W - M.l - M.r, plotH = H - M.t - M.b;
+  const groupW = plotW / opts.groups.length;
+  const barW = Math.min(44, groupW * 0.58);
+  const Y = v => M.t + plotH * (1 - v / 100);
+
+  for (const t of [0, 25, 50, 75, 100]) {
+    svg.appendChild(el('line', { x1: M.l, x2: W - M.r, y1: Y(t), y2: Y(t), stroke: ruleS, 'stroke-width': '0.6' }));
+    svg.appendChild(el('text', { x: M.l - 7, y: Y(t) + 3.5, 'text-anchor': 'end', 'font-family': FONT, 'font-size': '9.5', fill: inkSoft }, `${t}%`));
+  }
+  svg.appendChild(el('path', { d: `M ${M.l} ${M.t} L ${M.l} ${H - M.b} L ${W - M.r} ${H - M.b}`, fill: 'none', stroke: ink, 'stroke-width': '1' }));
+
+  opts.groups.forEach((g, gi) => {
+    const gx = M.l + gi * groupW + groupW / 2;
+    let yBottom = H - M.b;
+    for (const seg of g.segments) {
+      const h = plotH * seg.value / 100;
+      svg.appendChild(el('rect', { x: gx - barW / 2, y: yBottom - h, width: barW, height: h, fill: seg.color, rx: '1' }));
+      if (seg.value >= 18) {
+        svg.appendChild(el('text', {
+          x: gx, y: yBottom - h / 2 + 3, 'text-anchor': 'middle',
+          'font-family': FONT, 'font-size': '8.5', 'font-weight': '700',
+          fill: seg.textColor || '#ffffff',
+        }, `${Math.round(seg.value)}%`));
+      }
+      yBottom -= h;
+    }
+    svg.appendChild(el('text', { x: gx, y: H - M.b + 14, 'text-anchor': 'middle', 'font-family': FONT, 'font-size': '8', fill: ink }, g.label));
+    svg.appendChild(el('text', { x: gx, y: H - M.b + 26, 'text-anchor': 'middle', 'font-family': FONT, 'font-size': '7.5', fill: inkSoft }, `n=${g.n}`));
+  });
+
+  let lx = M.l, ly = H - 9;
+  for (const item of opts.legend || []) {
+    const w = 6.5 * item.name.length + 24;
+    svg.appendChild(el('rect', { x: lx, y: ly - 7, width: 9, height: 9, fill: item.color }));
+    svg.appendChild(el('text', { x: lx + 14, y: ly + 1, 'font-family': FONT, 'font-size': '9.5', fill: ink }, item.name));
+    lx += w;
+  }
+}
+
+const COLORS = {
+  structured: cv('--d1'),
+  random: cv('--d7'),
+  short: cv('--d8'),
+  mid: cv('--d4'),
+  long: cv('--d3'),
+};
+
+const TOKENIZER_BPT = [
+  { label: 'Gemini', bars: [
+    { value: 4.155, color: COLORS.structured },
+    { value: 1.154, color: COLORS.random },
+  ] },
+  { label: 'OpenAI', bars: [
+    { value: 4.368, color: COLORS.structured },
+    { value: 1.638, color: COLORS.random },
+  ] },
+  { label: 'Anthropic', bars: [
+    { value: 3.852, color: COLORS.structured },
+    { value: 1.550, color: COLORS.random },
+  ] },
+];
+
+const CONTEXT_WALLS = [
+  { label: 'G3.1 Lite', bars: [{ value: 1002, color: COLORS.structured }, { value: 1000, color: COLORS.random }] },
+  { label: 'G3 Flash', bars: [{ value: 1002, color: COLORS.structured }, { value: 1000, color: COLORS.random }] },
+  { label: 'G2.5', bars: [{ value: 1002, color: COLORS.structured }, { value: 1000, color: COLORS.random }] },
+  { label: 'Claude', bars: [{ value: 601, color: COLORS.structured }, { value: 256, color: COLORS.random }] },
+  { label: 'GPT-5.4', bars: [{ value: 1002, color: COLORS.structured }, { value: 400, color: COLORS.random }] },
+  { label: '4.1 nano', bars: [{ value: 1002, color: COLORS.structured }, { value: 1000, color: COLORS.random }] },
+  { label: '4.1 mini', bars: [{ value: 1002, color: COLORS.structured }, { value: 1000, color: COLORS.random }] },
+  { label: '4o mini', bars: [{ value: 401, color: COLORS.structured }, { value: 128, color: COLORS.random }] },
+  { label: '3.5', bars: [{ value: 64, color: COLORS.structured }, { value: 16, color: COLORS.random }] },
+];
+
+const CROSSOVER = {
+  'gemini-3.1-flash-lite': [[0.25,461],[0.5,527],[1,463],[2,498],[4,517],[8,496],[16,554],[32,633],[64,733],[128,935],[257,1176],[401,1181],[601,912],[802,1067],[1002,1295]],
+  'gpt-5.4-mini': [[0.25,267],[0.5,233],[1,226],[2,253],[4,259],[8,224],[16,266],[32,316],[64,349],[128,521],[257,779],[401,996],[601,1376],[802,1662],[1002,2044]],
+  'gpt-4.1-nano': [[0.25,176],[0.5,289],[1,220],[2,180],[4,198],[8,229],[16,242],[32,302],[64,359],[128,513],[257,882],[401,1220],[601,1730],[802,2772],[1002,3389]],
+  'claude-haiku-4-5': [[0.25,408],[0.5,391],[1,410],[2,414],[4,446],[8,519],[16,465],[32,543],[64,608],[128,817],[257,1231],[401,1755],[601,2229]],
+  'gemini-3-flash-preview': [[0.25,500],[0.5,504],[1,498],[2,512],[4,562],[8,652],[16,594],[32,663],[64,911],[128,1025],[257,1138],[401,1503],[601,2127],[802,3810],[1002,2861]],
+  'gemini-2.5-flash': [[0.25,330],[0.5,424],[1,390],[2,349],[4,333],[8,422],[16,414],[32,522],[64,590],[128,799],[257,1727],[401,3103],[601,2482],[802,3152],[1002,4384]],
+};
+
+const LITE_SWITCH = {
+  ttft: [[0.25,503],[0.5,535],[1,559],[2,551],[4,517],[8,496],[16,583],[32,633],[64,733],[128,935],[257,1181],[401,1181],[601,912],[802,1108],[1002,1732]],
+  total: [[0.25,1025],[0.5,954],[1,912],[2,961],[4,1043],[8,1019],[16,1012],[32,1020],[64,1068],[128,1506],[257,1704],[401,1601],[601,1148],[802,1417],[1002,1972]],
+};
+
+const DECODE_DIV = {
+  'gemini-3.1-flash-lite': [[0.25,4.6],[1,4.4],[2,4.6],[4,5.2],[8,5.3],[16,4.5],[32,4.3],[64,3.9],[128,4.7],[257,4.8],[401,4.3],[601,3.3],[802,2.6],[1002,3.3]],
+  'gpt-5.4-mini': [[0.25,7.2],[1,6.8],[2,6.7],[4,7.4],[8,7.5],[16,14.2],[32,7.5],[64,34.8],[128,9.2],[257,8.9],[401,13.2],[601,31.8],[802,57.6],[1002,108.4]],
+  'gpt-4.1-nano': [[0.25,15.4],[1,11.5],[2,9.8],[4,14.8],[8,12.3],[16,8.7],[32,21.2],[64,12.7],[128,12.0],[257,18.3],[401,17.8],[601,17.7],[802,28.4],[1002,67.5]],
+  'claude-haiku-4-5': [[0.25,11.6],[1,12.1],[2,11.5],[4,12.6],[8,11.8],[16,18.8],[32,13.1],[64,12.6],[128,11.1],[257,11.0],[401,10.9],[601,12.5]],
+  'gpt-4o-mini': [[0.25,19.3],[1,16.7],[2,12.6],[4,14.1],[8,11.9],[16,14.0],[32,26.8],[64,35.0],[128,32.0],[257,34.6],[401,54.8]],
+};
+
+const RANDOM_BIMODAL = [
+  { label: 'Claude', n: 66, short: 50, mid: 0, long: 50 },
+  { label: 'G2.5', n: 90, short: 50, mid: 0, long: 50 },
+  { label: 'G3', n: 89, short: 49.4, mid: 0, long: 50.6 },
+  { label: 'G3.1', n: 90, short: 50, mid: 0, long: 50 },
+  { label: '4.1 nano', n: 90, short: 50, mid: 0, long: 50 },
+  { label: '4o mini', n: 60, short: 50, mid: 0, long: 50 },
+  { label: 'GPT-5.4', n: 72, short: 50, mid: 0, long: 50 },
+  { label: '4.1 mini', n: 45, short: 0, mid: 0, long: 100 },
+  { label: '3.5', n: 21, short: 0, mid: 0, long: 100 },
+];
+
+const GEMINI_OUTPUT = {
+  'gemini-2.5-flash': [[0.25,100.2],[1,99.3],[2,99.0],[4,100.0],[8,100.0],[16,101.0],[32,100.3],[64,100.0],[128,100.0],[257,37.7],[401,39.0],[601,37.7],[802,46.3],[1002,39.3]],
+  'gemini-3-flash-preview': [[0.25,96.0],[1,96.0],[2,96.0],[4,96.0],[8,96.0],[16,96.0],[32,96.0],[64,96.0],[128,96.0],[257,96.0],[401,96.0],[601,96.0],[802,96.0],[1002,96.0]],
+  'gemini-3.1-flash-lite': [[0.25,96.0],[1,96.0],[2,96.0],[4,96.0],[8,96.0],[16,96.0],[32,96.0],[64,96.0],[128,96.0],[257,96.0],[401,96.0],[601,96.0],[802,96.0],[1002,96.0]],
+};
+
+const NEEDLE_ACCURACY = {
+  '100% models': [[0.25,100],[1,100],[2,100],[4,100],[8,100],[16,100],[32,100],[64,100],[128,100],[257,100],[401,100],[601,100],[802,100],[1002,100]],
+  'gpt-4.1-nano': [[0.25,100],[1,100],[2,100],[4,100],[8,100],[16,100],[32,100],[64,83.3],[128,100],[257,66.7],[401,100],[601,83.3],[802,100],[1002,33.3]],
+  'gpt-4o-mini': [[0.25,100],[1,100],[2,100],[4,100],[8,100],[16,100],[32,100],[64,100],[128,100],[257,83.3],[401,100]],
+};
+
+function renderAll() {
+  const token = document.querySelector('svg[data-chart="tokenizer-bpt"]');
+  if (token) drawGroupedBars(token, {
+    height: 320, groups: TOKENIZER_BPT, yMax: 5, yLabel: 'bytes / token',
+    valueFmt: v => v.toFixed(2),
+    legend: [
+      { name: 'structured', color: COLORS.structured },
+      { name: 'random hex', color: COLORS.random },
+    ],
+  });
+
+  const walls = document.querySelector('svg[data-chart="context-walls"]');
+  if (walls) drawGroupedBars(walls, {
+    height: 350, groups: CONTEXT_WALLS, yMax: 1100, yLabel: 'max successful KB',
+    valueLabels: false, barW: 18,
+    legend: [
+      { name: 'structured', color: COLORS.structured },
+      { name: 'random hex', color: COLORS.random },
+    ],
+  });
+
+  const crossover = document.querySelector('svg[data-chart="crossover"]');
+  if (crossover) drawLineChart(crossover, {
+    height: 400, xType: 'log', yType: 'log',
+    xLabel: 'prompt size (KB)', yLabel: 'TTFT floor (ms)',
+    series: [
+      { name: 'gemini-3.1-flash-lite', color: cv('--d3'), points: CROSSOVER['gemini-3.1-flash-lite'] },
+      { name: 'gpt-5.4-mini', color: cv('--d6'), points: CROSSOVER['gpt-5.4-mini'] },
+      { name: 'gpt-4.1-nano', color: cv('--d2'), points: CROSSOVER['gpt-4.1-nano'] },
+      { name: 'claude-haiku-4-5', color: cv('--d8'), points: CROSSOVER['claude-haiku-4-5'] },
+      { name: 'gemini-3-flash-preview', color: cv('--d4'), points: CROSSOVER['gemini-3-flash-preview'] },
+      { name: 'gemini-2.5-flash', color: cv('--d5'), points: CROSSOVER['gemini-2.5-flash'] },
+    ],
+    bands: [{ x0: 250, x1: 650, label: 'crossover', color: cv('--d4') }],
+  });
+
+  const lite = document.querySelector('svg[data-chart="lite-switch"]');
+  if (lite) drawLineChart(lite, {
+    height: 360, xType: 'log', yType: 'linear', yRange: [400, 2100],
+    xLabel: 'prompt size (KB)', yLabel: 'milliseconds',
+    series: [
+      { name: 'TTFT floor', color: cv('--d3'), points: LITE_SWITCH.ttft, strokeWidth: '2.2' },
+      { name: 'total floor', color: cv('--d6'), points: LITE_SWITCH.total, strokeWidth: '2.2' },
+    ],
+    bands: [{ x0: 390, x1: 620, label: 'dip', color: cv('--d3') }],
+  });
+
+  const decode = document.querySelector('svg[data-chart="decode-div"]');
+  if (decode) drawLineChart(decode, {
+    height: 390, xType: 'log', yType: 'log',
+    xLabel: 'prompt size (KB)', yLabel: 'decode ms / token',
+    series: [
+      { name: 'gemini-3.1-flash-lite', color: cv('--d3'), points: DECODE_DIV['gemini-3.1-flash-lite'] },
+      { name: 'gpt-5.4-mini', color: cv('--d6'), points: DECODE_DIV['gpt-5.4-mini'] },
+      { name: 'gpt-4.1-nano', color: cv('--d2'), points: DECODE_DIV['gpt-4.1-nano'] },
+      { name: 'claude-haiku-4-5', color: cv('--d8'), points: DECODE_DIV['claude-haiku-4-5'] },
+      { name: 'gpt-4o-mini', color: cv('--d7'), points: DECODE_DIV['gpt-4o-mini'] },
+    ],
+    annotations: [
+      { x: 1002, y: 108.4, text: '108 ms/tok', anchor: 'end', fontSize: 10, color: cv('--d6'), dx: -5, dy: -8 },
+      { x: 1002, y: 3.3, text: '3.3 ms/tok', anchor: 'end', fontSize: 10, color: cv('--d3'), dx: -5, dy: 14 },
+    ],
+  });
+
+  const random = document.querySelector('svg[data-chart="random-bimodal"]');
+  if (random) drawStackedBars(random, {
+    height: 330,
+    groups: RANDOM_BIMODAL.map(g => ({
+      label: g.label, n: g.n,
+      segments: [
+        { value: g.long, color: COLORS.long },
+        { value: g.mid, color: COLORS.mid },
+        { value: g.short, color: COLORS.short },
+      ],
+    })),
+    legend: [
+      { name: 'long >500 tok', color: COLORS.long },
+      { name: 'medium 11-500', color: COLORS.mid },
+      { name: 'short <=10', color: COLORS.short },
+    ],
+  });
+
+  const output = document.querySelector('svg[data-chart="gemini-output"]');
+  if (output) drawLineChart(output, {
+    height: 360, xType: 'log', yType: 'linear', yRange: [0, 112],
+    xLabel: 'prompt size (KB)', yLabel: 'avg output tokens',
+    series: [
+      { name: 'gemini-2.5-flash', color: cv('--d5'), points: GEMINI_OUTPUT['gemini-2.5-flash'], strokeWidth: '2.2' },
+      { name: 'gemini-3-flash-preview', color: cv('--d4'), points: GEMINI_OUTPUT['gemini-3-flash-preview'] },
+      { name: 'gemini-3.1-flash-lite', color: cv('--d3'), points: GEMINI_OUTPUT['gemini-3.1-flash-lite'] },
+    ],
+    bands: [{ x0: 240, x1: 1050, label: 'collapse zone', color: cv('--d5') }],
+  });
+
+  const needle = document.querySelector('svg[data-chart="needle-accuracy"]');
+  if (needle) drawLineChart(needle, {
+    height: 350, xType: 'log', yType: 'linear', yRange: [0, 105],
+    xLabel: 'prompt size (KB)', yLabel: 'accuracy',
+    yFmt: v => `${Math.round(v)}%`,
+    series: [
+      { name: '100% models', color: cv('--d8'), points: NEEDLE_ACCURACY['100% models'], dash: '5 4' },
+      { name: 'gpt-4.1-nano', color: cv('--d2'), points: NEEDLE_ACCURACY['gpt-4.1-nano'], strokeWidth: '2.2' },
+      { name: 'gpt-4o-mini', color: cv('--d7'), points: NEEDLE_ACCURACY['gpt-4o-mini'] },
+    ],
+    annotations: [
+      { x: 1002, y: 33.3, text: '2/6', anchor: 'end', fontSize: 10, color: cv('--d2'), dx: -5, dy: 14 },
+    ],
+  });
+}
+
+function ready() {
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderAll);
+  else renderAll();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
+else ready();
+</script>
+
+</body>
+</html>

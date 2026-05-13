@@ -1,0 +1,25 @@
+{
+  "name": "attention",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "migrate": "tsx src/migrate.ts",
+    "run": "tsx src/runner.ts",
+    "serve": "tsx src/server.ts",
+    "fetch-context": "tsx src/fetch-context.ts",
+    "test:providers": "tsx tests/providers.spec.ts"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "express": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
