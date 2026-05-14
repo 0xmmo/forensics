@@ -51,7 +51,7 @@
       body {
         max-width: 780px;
         margin: 0 auto;
-        padding: 8rem 1.5rem 4rem;
+        padding: 4rem 1.5rem 4rem;
       }
       a {
         color: var(--link);
@@ -66,7 +66,6 @@
         align-items: baseline;
         flex-wrap: wrap;
         gap: 0.75rem 1.25rem;
-        padding-top: 1rem;
         padding-bottom: 1rem;
         border-bottom: 1px solid var(--rule);
         margin-bottom: 2rem;
@@ -391,7 +390,8 @@
     <header class="masthead">
       <a href="index.html" class="wordmark">Small Model Forensics</a>
       <nav class="nav">
-        <a href="index.html">viewer</a><a href="post.html" class="active">post</a>
+        <a href="index.html">viewer</a
+        ><a href="post.html" class="active">post</a>
       </nav>
     </header>
 
@@ -428,7 +428,7 @@
 
       <figure class="data-fig">
         <figcaption class="figcap-inline">
-          <span class="fig-num">fig. 3</span
+          <span class="fig-num">fig. 1</span
           ><span class="fig-title">TTFT floor vs prompt size</span
           ><span class="fig-meta">log-log &middot; min per byte bucket</span>
         </figcaption>
@@ -446,7 +446,7 @@
       <br />
       <table>
         <caption>
-          <span class="tab">tab. 3</span
+          <span class="tab">tab. 1</span
           >TTFT floor rankings at representative byte sizes (lower is faster).
         </caption>
         <thead>
@@ -548,7 +548,7 @@
 
       <figure class="data-fig">
         <figcaption class="figcap-inline">
-          <span class="fig-num">fig. 1</span>
+          <span class="fig-num">fig. 2</span>
           <span class="fig-title"
             >TTFT floor vs context &mdash; seven models, four orders of
             magnitude</span
@@ -577,7 +577,7 @@
 
       <table>
         <caption>
-          <span class="tab">tab. 1</span
+          <span class="tab">tab. 2</span
           >Fitted scaling exponent of
           <code>min TTFT</code
           >, by model.
@@ -680,7 +680,7 @@
 
       <figure class="data-fig">
         <figcaption class="figcap-inline">
-          <span class="fig-num">fig. 8</span
+          <span class="fig-num">fig. 3</span
           ><span class="fig-title">decode ms per output token vs context</span
           ><span class="fig-meta"
             >linear y &middot; mean per cell &middot; all prompt shapes</span
@@ -695,7 +695,7 @@
 
       <table>
         <caption>
-          <span class="tab">tab. 5</span
+          <span class="tab">tab. 3</span
           >Decode ms/token at representative prompt sizes
         </caption>
         <thead>
@@ -790,7 +790,7 @@
 
       <figure class="data-fig">
         <figcaption class="figcap-inline">
-          <span class="fig-num">fig. 7</span
+          <span class="fig-num">fig. 4</span
           ><span class="fig-title"
             >Gemini Lite negative-scaling zone, TTFT and total latency</span
           ><span class="fig-meta"
@@ -812,7 +812,7 @@
 
       <figure class="data-fig">
         <figcaption class="figcap-inline">
-          <span class="fig-num">fig. 13</span
+          <span class="fig-num">fig. 5</span
           ><span class="fig-title">Gemini Lite decode cost vs input tokens</span
           ><span class="fig-meta"
             >song-lyrics-prompt &middot; median &middot; p10–p90 bars</span
@@ -827,7 +827,7 @@
 
       <figure class="data-fig">
         <figcaption class="figcap-inline">
-          <span class="fig-num">fig. 5</span
+          <span class="fig-num">fig. 6</span
           ><span class="fig-title"
             >prefill throughput &mdash; KB / sec at the latency floor</span
           ><span class="fig-meta"
@@ -860,7 +860,7 @@
 
       <figure class="data-fig">
         <figcaption class="figcap-inline">
-          <span class="fig-num">fig. 2</span
+          <span class="fig-num">fig. 7</span
           ><span class="fig-title"
             >bytes per token by provider family and content type</span
           ><span class="fig-meta">avg at &gt; 100 KB prompt</span>
@@ -906,17 +906,34 @@
         if (Math.abs(v) < 10 && !Number.isInteger(v)) return v.toFixed(1);
         return v.toFixed(0);
       }
-      function logTicks(lo, hi) {
-        const out = [];
-        for (
-          let p = Math.floor(Math.log10(lo));
-          p <= Math.ceil(Math.log10(hi));
-          p++
-        ) {
-          const v = Math.pow(10, p);
-          if (v >= lo * 0.99 && v <= hi * 1.01) out.push(v);
+      function logTicks(lo, hi, dense = false) {
+        const p0 = Math.floor(Math.log10(lo)),
+          p1 = Math.ceil(Math.log10(hi));
+        const gen = (mults) => {
+          const out = [];
+          for (let p = p0; p <= p1; p++)
+            for (const m of mults) {
+              const v = m * Math.pow(10, p);
+              if (v >= lo * 0.99 && v <= hi * 1.01) out.push(v);
+            }
+          return out.sort((a, b) => a - b);
+        };
+        if (!dense) return gen([1]);
+        // dense: bare powers of 10 leave short-span log axes nearly tickless.
+        // Walk from coarse to fine subdivisions and keep the finest one that
+        // still reads cleanly (<= 9 ticks).
+        const ladders = [
+          [1],
+          [1, 2, 5],
+          [1, 2, 3, 5, 7],
+          [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        ];
+        let best = gen([1]);
+        for (const mults of ladders) {
+          const t = gen(mults);
+          if (t.length <= 9) best = t;
         }
-        return out;
+        return best;
       }
       function linearTicks(lo, hi, want = 6) {
         const range = hi - lo || 1,
@@ -1089,7 +1106,10 @@
         }
         const xTicks =
             xType === "log" ? logTicks(xLo, xHi) : linearTicks(xLo, xHi),
-          yTicks = yType === "log" ? logTicks(yLo, yHi) : linearTicks(yLo, yHi);
+          yTicks =
+            yType === "log"
+              ? logTicks(yLo, yHi, opts.denseYTicks)
+              : linearTicks(yLo, yHi);
         for (const t of xTicks)
           svg.appendChild(
             el("line", {
@@ -2305,6 +2325,7 @@
             height: 400,
             xType: "log",
             yType: "log",
+            denseYTicks: true,
             xLabel: "input tokens",
             yLabel: "TTFT floor (ms)",
             series: p1Series(P1_TTFT, [
@@ -2359,6 +2380,7 @@
             height: 400,
             xType: "log",
             yType: "log",
+            denseYTicks: true,
             xLabel: "prompt size (KB)",
             yLabel: "TTFT floor (ms)",
             series: [
