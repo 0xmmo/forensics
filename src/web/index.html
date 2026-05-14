@@ -450,9 +450,9 @@ const METRIC_INFO = {
 };
 
 const PROMPT_KIND_INFO = {
-  'song-toads':  { label: 'song-toads',  desc: 'Natural English filler + nonce; tail asks for a song about toads.' },
+  'song-toads':  { label: 'song-lyrics-prompt',  desc: 'Natural English filler + nonce; tail asks for a song about toads.' },
   'random':      { label: 'random',      desc: 'High-entropy hex bytes; tail asks for a long story. Defeats caching and content-aware sparsity.' },
-  'needle-p50':  { label: 'needle-p50',  desc: 'Natural filler with a secret code inserted at 50% position; tail asks model to repeat code then write an essay.' },
+  'needle-p50':  { label: 'needle-prompt-p50',  desc: 'Natural filler with a secret code inserted at 50% position; tail asks model to repeat code then write an essay.' },
 };
 
 const METRICS = {
@@ -503,7 +503,7 @@ async function loadMeta() {
   for (const k of meta.prompt_kinds ?? []) {
     const opt = document.createElement('option');
     opt.value = k.prompt_kind;
-    opt.textContent = k.prompt_kind;
+    opt.textContent = PROMPT_KIND_INFO[k.prompt_kind]?.label ?? k.prompt_kind;
     pkSel.appendChild(opt);
   }
 }
