@@ -370,43 +370,6 @@
         color: var(--muted);
         font-size: 0.8rem;
       }
-      .section-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-        background: var(--ink);
-        color: var(--bg);
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        padding: 0.45rem 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        opacity: 0;
-        transition: opacity 0.2s;
-        pointer-events: none;
-      }
-      .section-bar.visible {
-        opacity: 1;
-        pointer-events: auto;
-      }
-      .section-bar .bar-num {
-        color: var(--accent);
-        margin-right: 0.25rem;
-      }
-      .section-bar .bar-title {
-        flex: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      body {
-        padding-top: 0;
-      }
       @media (max-width: 600px) {
         body {
           padding: 2rem 1rem 3rem;
@@ -425,10 +388,6 @@
     </style>
   </head>
   <body>
-    <div class="section-bar" id="section-bar">
-      <span class="bar-num" id="bar-num"></span
-      ><span class="bar-title" id="bar-title"></span>
-    </div>
 
     <header class="masthead">
       <a href="/" class="wordmark">Small Model Forensics</a>
@@ -925,85 +884,8 @@
       </p>
     </section>
 
-    <!-- ================================================================ -->
-    <!-- 6 — Summary -->
-    <!-- ================================================================ -->
-    <section id="s6">
-      <h2><span class="num">06</span>What we think is going on</h2>
-      <p class="lede">
-        Five things you can take away from the dataset without overcommitting.
-      </p>
-
-      <p>
-        None of what follows is testable from the data we already have. Each
-        becomes testable with a small, directed follow-up sweep &mdash; which is
-        roughly the work plan that falls out of this post.
-      </p>
-
-      <p>
-        <strong
-          >1. Nothing we measured looks like dense O(n&sup2;) attention.</strong
-        >
-        Every long-context route in the lineup is doing something else &mdash;
-        block-sparse, retrieval-augmented, paged, hierarchical, something. The
-        closest thing we have to a candidate for honest dense attention is
-        gpt-4.1-nano at the top of its range (<code>&alpha; &approx; 1.02</code
-        >), and even that is more likely a routing change than a kernel.
-      </p>
-
-      <p>
-        <strong
-          >2. The &ldquo;fastest model&rdquo; question depends entirely on which
-          slice of the curve you&rsquo;re on.</strong
-        >
-        GPT-4.1-nano is the fastest sub-1KB model and the fifth-fastest at 1 MB.
-        There is no model that is best everywhere. Any latency benchmark that
-        only samples one slice is misleading at the others.
-      </p>
-
-      <p>
-        <strong>3. OpenAI hasn&rsquo;t changed its tokenizer in years.</strong>
-        Five model versions across at least three generations produce identical
-        bytes-per-token numbers. That&rsquo;s a deliberate choice: it lets
-        prefix caches, embedding tables, and serving infrastructure ride across
-        model versions without translation. Gemini and Anthropic each ship their
-        own. Gemini&rsquo;s in particular has aggressive byte-fallback that
-        inflates random/binary content by <code>~3.6&times;</code>
-        relative to its English ratio.
-      </p>
-
-      <p>
-        <strong>4. Decode is the bigger story at 1 MB than prefill.</strong> A
-        <code>33&times;</code> gap on <code>ms/tok</code> turns into a 30-second
-        difference on a 1,000-token response at the same context size. For
-        products that need long answers after long prompts, the prefill curves
-        are basically a distraction.
-      </p>
-
-      <p>
-        <strong
-          >5. Gemini Lite past <code>~100 k</code> tokens is a different
-          machine.</strong
-        >
-        Lower TTFT, lower decode, higher throughput &mdash; all on the same
-        model name, the same API, the same call shape. We have four candidate
-        mechanisms (speculative decoding kicking in past a threshold;
-        long-context requests landing on different hardware; a KV-cache layout
-        switch; streaming-chunk coalescing distorting the denominator) and none
-        of them are falsifiable from the data we have. Each becomes falsifiable
-        with a small directed sweep.
-      </p>
-
-      <p>
-        The honest summary of this whole exercise: the providers are not running
-        anything close to the same architecture under the same product names.
-        You can&rsquo;t reason about them as if they are. The right unit of
-        analysis is the curve, not the number.
-      </p>
-    </section>
-
     <footer class="colophon">
-      <span>attention &mdash; 2026-05-13</span>
+      <span>Small Model Forensics &mdash; 2026-05-13</span>
       <span><a href="/">interactive viewer &rarr;</a></span>
     </footer>
 
@@ -2813,50 +2695,6 @@
         document.addEventListener("DOMContentLoaded", ready);
       else ready();
 
-      /* ========== SCROLL SPY ========== */
-      (function () {
-        const bar = document.getElementById("section-bar");
-        const barNum = document.getElementById("bar-num");
-        const barTitle = document.getElementById("bar-title");
-        const sections = [];
-        document.querySelectorAll('section[id^="s"]').forEach((sec) => {
-          const h2 = sec.querySelector("h2");
-          if (!h2) return;
-          const numEl = h2.querySelector(".num");
-          const num = numEl ? numEl.textContent.trim() : "";
-          const title = h2.textContent.replace(num, "").trim();
-          sections.push({ el: sec, num, title });
-        });
-        let ticking = false;
-        function update() {
-          const scrollY = window.scrollY + 60;
-          let current = null;
-          for (let i = sections.length - 1; i >= 0; i--) {
-            if (sections[i].el.offsetTop <= scrollY) {
-              current = sections[i];
-              break;
-            }
-          }
-          if (current && window.scrollY > 200) {
-            bar.classList.add("visible");
-            barNum.textContent = current.num;
-            barTitle.textContent = current.title;
-          } else {
-            bar.classList.remove("visible");
-          }
-          ticking = false;
-        }
-        window.addEventListener(
-          "scroll",
-          function () {
-            if (!ticking) {
-              ticking = true;
-              requestAnimationFrame(update);
-            }
-          },
-          { passive: true },
-        );
-      })();
     </script>
   </body>
 </html>
