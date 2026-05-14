@@ -1,5 +1,5 @@
 {
-  "name": "attention",
+  "name": "forensics",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,18 +8,15 @@
   "scripts": {
     "migrate": "tsx src/migrate.ts",
     "run": "tsx src/runner.ts",
-    "serve": "tsx src/server.ts",
+    "export": "tsx src/export.ts",
     "fetch-context": "tsx src/fetch-context.ts",
     "test:providers": "tsx tests/providers.spec.ts"
   },
   "dependencies": {
-    "@libsql/client": "^0.14.0",
-    "express": "^5.0.0"
+    "@libsql/client": "^0.14.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
     "@types/node": "^22.10.0",
-    "nodemon": "^3.1.14",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }

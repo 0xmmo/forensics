@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>attention — prefill scaling observatory</title>
+<title>Small Model Forensics — viewer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -53,42 +53,33 @@
   a { color: var(--link); text-decoration: none; }
   a:hover { text-decoration: underline; }
 
-  /* —————————————————————————————————————————— masthead */
+  /* —————————————————————————————————————————— masthead (matches post.html) */
   .masthead {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     flex-wrap: wrap;
     gap: 0.75rem 1.25rem;
+    padding-top: 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--rule);
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
   }
   .wordmark {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--ink);
-    margin: 0;
   }
-  .tagline {
-    color: var(--muted);
-    font-size: 0.8rem;
-    flex: 1;
-    min-width: 0;
-  }
-  .tagline .pipe { color: var(--rule); margin: 0 0.4rem; }
-  .nav-strip {
+  .nav {
     display: flex;
-    align-items: center;
     gap: 0.85rem;
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
-  .nav-strip a { color: var(--muted); }
-  .nav-strip a:hover { color: var(--ink); text-decoration: none; }
-  .nav-strip a.active { color: var(--ink); font-weight: 700; }
-  .nav-strip .div { color: var(--rule); }
+  .nav a { color: var(--muted); }
+  .nav a:hover { color: var(--ink); text-decoration: none; }
+  .nav a.active { color: var(--ink); font-weight: 700; }
 
   .stat-strip {
     display: flex;
@@ -287,20 +278,9 @@
 <main>
 
   <header class="masthead">
-    <h1 class="wordmark">attention</h1>
-    <div class="tagline">
-      <span>llm prefill scaling observatory</span>
-      <span class="pipe">·</span>
-      <span>fit ttft against context to expose what the provider is doing</span>
-    </div>
-    <nav class="nav-strip">
-      <a href="/" class="active">viewer</a>
-      <span class="div">·</span>
-      <a href="/findings">findings</a>
-      <span class="div">·</span>
-      <a href="/research">research</a>
-      <span class="div">·</span>
-      <a href="/expert_research">expert</a>
+    <a href="index.html" class="wordmark">Small Model Forensics</a>
+    <nav class="nav">
+      <a href="index.html" class="active">viewer</a><a href="post.html">post</a>
     </nav>
     <div class="stat-strip">
       <span id="meta">— rows</span>
@@ -416,7 +396,7 @@
 
   <footer class="colophon">
     <span class="piece"><span>attention</span><span class="dot">·</span><span>prefill scaling sweep viewer</span></span>
-    <span class="piece"><span>data via /api/calls</span><span class="dot">·</span><span>plotly 2.35</span><span class="dot">·</span><span id="rendered-at">—</span></span>
+    <span class="piece"><span>data via data/calls.json</span><span class="dot">·</span><span>plotly 2.35</span><span class="dot">·</span><span id="rendered-at">—</span></span>
   </footer>
 
 </main>
@@ -476,8 +456,58 @@ const METRICS = {
   reasoning_tokens: r => r.reasoning_tokens,
 };
 
-async function loadMeta() {
-  const meta = await (await fetch('/api/meta')).json();
+// No backend: the full dataset is shipped as a static JSON file (produced by
+// `npm run export`). `/api/meta` and `/api/calls` are reproduced client-side
+// over ALL_ROWS — meta from all rows, the calls list from status='complete'.
+let ALL_ROWS = [];
+
+async function loadAll() {
+  const res = await fetch('data/calls.json', { cache: 'no-cache' });
+  if (!res.ok) throw new Error(`failed to load data/calls.json: ${res.status}`);
+  ALL_ROWS = await res.json();
+}
+
+// Mirrors the GROUP BY / DISTINCT logic of the old /api/meta endpoint.
+function computeMeta(rows) {
+  const bySweep = new Map();
+  for (const r of rows) {
+    if (r.sweep_id == null) continue;
+    let s = bySweep.get(r.sweep_id);
+    if (!s) {
+      s = { sweep_id: r.sweep_id, started_at: r.created_at,
+            n: 0, n_ok: 0, n_test: 0, _ctx: new Set(), _prov: new Set() };
+      bySweep.set(r.sweep_id, s);
+    }
+    s.n += 1;
+    if (r.status === 'complete') s.n_ok += 1;
+    s.n_test += r.is_test ? 1 : 0;
+    if (r.context_type != null) s._ctx.add(r.context_type);
+    if (r.provider != null) s._prov.add(r.provider);
+    if (r.created_at != null && (s.started_at == null || r.created_at < s.started_at)) {
+      s.started_at = r.created_at;
+    }
+  }
+  const sweeps = [...bySweep.values()]
+    .map(s => ({
+      sweep_id: s.sweep_id, started_at: s.started_at,
+      n: s.n, n_ok: s.n_ok, n_test: s.n_test,
+      context_types: [...s._ctx].sort().join(','),
+      providers: [...s._prov].sort().join(','),
+    }))
+    .sort((a, b) => String(b.started_at).localeCompare(String(a.started_at)));
+  const distinct = key => [...new Set(
+    rows.map(r => r[key]).filter(v => v != null && v !== '')
+  )].sort();
+  return {
+    sweeps,
+    context_types: distinct('context_type').map(v => ({ context_type: v })),
+    providers: distinct('provider').map(v => ({ provider: v })),
+    prompt_kinds: distinct('prompt_kind').map(v => ({ prompt_kind: v })),
+  };
+}
+
+function loadMeta() {
+  const meta = computeMeta(ALL_ROWS);
   const sweepSel = $('sweep');
   for (const s of meta.sweeps) {
     const opt = document.createElement('option');
@@ -582,15 +612,23 @@ function aggregate(points, mode) {
   return { kind: 'aggregated', points: out };
 }
 
-async function loadData() {
+// Mirrors the WHERE clause of the old /api/calls endpoint, in-memory.
+function loadData() {
   document.body.classList.add('loading');
-  const params = new URLSearchParams();
-  if ($('sweep').value) params.set('sweep', $('sweep').value);
-  if ($('context_type').value) params.set('context_type', $('context_type').value);
-  if ($('provider').value) params.set('provider', $('provider').value);
-  if ($('prompt_kind').value) params.set('prompt_kind', $('prompt_kind').value);
-  if ($('is_test').value !== '') params.set('is_test', $('is_test').value);
-  const rows = await (await fetch('/api/calls?' + params.toString())).json();
+  const sweep   = $('sweep').value;
+  const ctx     = $('context_type').value;
+  const prov    = $('provider').value;
+  const pk      = $('prompt_kind').value;
+  const isTest  = $('is_test').value;
+  const rows = ALL_ROWS.filter(r => {
+    if (r.status !== 'complete') return false;
+    if (sweep && r.sweep_id !== sweep) return false;
+    if (ctx && r.context_type !== ctx) return false;
+    if (prov && r.provider !== prov) return false;
+    if (pk && r.prompt_kind !== pk) return false;
+    if ((isTest === '0' || isTest === '1') && r.is_test !== Number(isTest)) return false;
+    return true;
+  });
   $('meta').textContent = `${rows.length.toLocaleString()} rows`;
   render(rows);
   $('rendered-at').textContent = new Date().toISOString().replace('T', ' ').slice(0, 16) + ' utc';
@@ -784,11 +822,22 @@ function renderSummary(byModel, yKey, modelColors) {
 for (const id of ['sweep','context_type','provider','prompt_kind','is_test','x_axis','y_axis','scale','agg']) {
   $(id).addEventListener('change', loadData);
 }
-$('reload').addEventListener('click', loadData);
+$('reload').addEventListener('click', async () => {
+  document.body.classList.add('loading');
+  try { await loadAll(); } catch (e) { console.error(e); }
+  loadData();
+});
 
 (async () => {
-  await loadMeta();
-  await loadData();
+  try {
+    await loadAll();
+    loadMeta();
+    loadData();
+  } catch (e) {
+    console.error(e);
+    $('meta').textContent = 'load error — run `npm run export`';
+    document.body.classList.remove('loading');
+  }
 })();
 </script>
 </body>

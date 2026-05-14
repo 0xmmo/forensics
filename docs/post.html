@@ -388,11 +388,10 @@
     </style>
   </head>
   <body>
-
     <header class="masthead">
-      <a href="/" class="wordmark">Small Model Forensics</a>
+      <a href="index.html" class="wordmark">Small Model Forensics</a>
       <nav class="nav">
-        <a href="/">viewer</a><a href="/post" class="active">post</a>
+        <a href="index.html">viewer</a><a href="post.html" class="active">post</a>
       </nav>
     </header>
 
@@ -403,13 +402,12 @@
       <p class="dek">
         Claude and I made 2,000 API calls to nine small closed-weight models
         across three providers in a range of prompt sizes between 100 and 1M
-        tokens. I wanted to determine the models with the best speed and latency
-        for my application. But ended up discovering some interesting things
-        about how providers scale inference, or fail to, in 2026.
+        tokens. We ended up discovering some interesting things about how
+        providers scale inference, or fail to, in 2026.
       </p>
       <p class="links">
         You can view all the measurements in the
-        <a href="/">interactive viewer</a>. Code and raw dataset on
+        <a href="index.html">interactive viewer</a>. Code and raw dataset on
         <a href="#">GitHub</a>.
       </p>
     </section>
@@ -424,9 +422,8 @@
       </h2>
 
       <p>
-        People quote latency numbers as if a model has
-        <em>a</em> latency. It has a curve. And the curves cross, so choose
-        wisely.
+        People quote first-token latency numbers as if a model has
+        <em>a</em> latency. It has a curve, and the curves cross. Choose wisely.
       </p>
 
       <figure class="data-fig">
@@ -440,13 +437,13 @@
           data-chart="p2-crossover"
           aria-label="TTFT ranking crossover chart"
         ></svg>
-        <p class="fig-caption">
-          <em>gpt-4.1-nano</em> wins on tiny/sub-second queries,
-          <em>gemini-3.1-flash-lite</em> wins on large queries >600KB (~150K
-          tokens is the crossover).
-        </p>
       </figure>
-
+      <p>
+        <em>gpt-4.1-nano</em> wins on tiny/sub-second queries,
+        <em>gemini-3.1-flash-lite</em> wins on large queries >600KB (~150K
+        tokens).
+      </p>
+      <br />
       <table>
         <caption>
           <span class="tab">tab. 3</span
@@ -676,9 +673,9 @@
       </h2>
 
       <p>
-        The textbook says decode-per-token should be near flat. Maybe it rises a
-        touch as the prefix grows. Instead, we saw models with decode costs that
-        rise or even fall.
+        The textbook says decode-per-token should be near flat or rises a touch
+        as the prefix grows. We saw models with decode costs that rise
+        significantly or even even fall.
       </p>
 
       <figure class="data-fig">
@@ -886,7 +883,7 @@
 
     <footer class="colophon">
       <span>Small Model Forensics &mdash; 2026-05-13</span>
-      <span><a href="/">interactive viewer &rarr;</a></span>
+      <span><a href="index.html">interactive viewer &rarr;</a></span>
     </footer>
 
     <script>
@@ -2694,7 +2691,6 @@
       if (document.readyState === "loading")
         document.addEventListener("DOMContentLoaded", ready);
       else ready();
-
     </script>
   </body>
 </html>

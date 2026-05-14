@@ -1,6 +1,9 @@
 node_modules/
 dist/
-data/
+.DS_Store
+# the local sqlite DB lives in /data — anchored so it does NOT also match
+# docs/data/, which holds the committed static export the Pages site serves.
+/data/
 *.db
 *.db-journal
 *.db-wal
