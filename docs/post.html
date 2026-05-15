@@ -447,127 +447,11 @@
     </section>
 
     <!-- ================================================================ -->
-    <!-- 1 — Crossover -->
+    <!-- 1 — Prefill scales way way under O(n²) -->
     <!-- ================================================================ -->
     <section id="s1">
       <h2>
-        <span class="num">01</span>Fastest model at 1 KB context is the slowest
-        at 1 MB
-      </h2>
-
-      <p>
-        People quote first-token latency numbers as if a model has
-        <em>a</em> latency. It has a curve, and the curves cross. Choose wisely.
-      </p>
-
-      <figure class="data-fig">
-        <figcaption class="figcap-inline">
-          <span class="fig-num">fig. 1</span
-          ><span class="fig-title">TTFT floor vs prompt size</span
-          ><span class="fig-meta">log-log &middot; min per byte bucket</span>
-        </figcaption>
-        <svg
-          class="chart"
-          data-chart="p2-crossover"
-          aria-label="TTFT ranking crossover chart"
-        ></svg>
-      </figure>
-      <p>
-        <em>gpt-4.1-nano</em> wins on tiny/sub-second queries,
-        <em>gemini-3.1-flash-lite</em> wins on large queries >600KB (~150K
-        tokens).
-      </p>
-      <br />
-      <table>
-        <caption>
-          <span class="tab">tab. 1</span
-          >TTFT floor rankings at representative byte sizes (lower is faster).
-        </caption>
-        <thead>
-          <tr>
-            <th>model</th>
-            <th>tiny (&lt;1 KB)</th>
-            <th>64 KB</th>
-            <th>256 KB</th>
-            <th>601 KB</th>
-            <th>1 MB</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              <span class="swatch" style="color: var(--d2)"></span>gpt-4.1-nano
-            </td>
-            <td class="hi">#1 (176 ms)</td>
-            <td>#2 (359)</td>
-            <td>#2 (882)</td>
-            <td>#3 (1,730)</td>
-            <td>#5 (4,876)</td>
-          </tr>
-          <tr>
-            <td>
-              <span class="swatch" style="color: var(--d6)"></span>gpt-5.4-mini
-            </td>
-            <td>#2 (233)</td>
-            <td class="hi">#1 (349)</td>
-            <td class="hi">#1 (779)</td>
-            <td>#2 (1,376)</td>
-            <td>#4 (3,353)</td>
-          </tr>
-          <tr>
-            <td>
-              <span class="swatch" style="color: var(--d5)"></span
-              >gemini-2.5-flash
-            </td>
-            <td>#5 (289)</td>
-            <td>#3 (590)</td>
-            <td>#6 (2,290)</td>
-            <td>#5 (2,482)</td>
-            <td>#6 (4,650)</td>
-          </tr>
-          <tr>
-            <td>
-              <span class="swatch" style="color: var(--d8)"></span
-              >claude-haiku-4-5
-            </td>
-            <td>#7 (391)</td>
-            <td>#4 (608)</td>
-            <td>#4 (1,241)</td>
-            <td>#4 (2,229)</td>
-            <td class="dim">rejected</td>
-          </tr>
-          <tr>
-            <td>
-              <span class="swatch" style="color: var(--d3)"></span
-              >gemini-3.1-flash-lite
-            </td>
-            <td>#8 (461)</td>
-            <td>#5 (733)</td>
-            <td>#3 (1,181)</td>
-            <td class="hi">#1 (912)</td>
-            <td class="hi">#1 (1,732)</td>
-          </tr>
-          <tr>
-            <td>
-              <span class="swatch" style="color: var(--d4)"></span
-              >gemini-3-flash-preview
-            </td>
-            <td>#9 (492)</td>
-            <td>#6 (911)</td>
-            <td>#5 (1,268)</td>
-            <td>#6 (2,127)</td>
-            <td>#3 (2,861)</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ================================================================ -->
-    <!-- 2 — Prefill scales way way under O(n²) -->
-    <!-- ================================================================ -->
-    <section id="s2">
-      <h2>
-        <span class="num">02</span>Every model's prefill is nowhere near O(n²)
+        <span class="num">01</span>Every model's prefill is nowhere near O(n²)
       </h2>
 
       <p>
@@ -582,7 +466,7 @@
 
       <figure class="data-fig">
         <figcaption class="figcap-inline">
-          <span class="fig-num">fig. 2</span>
+          <span class="fig-num">fig. 1</span>
           <span class="fig-title"
             >TTFT floor vs context &mdash; seven models, four orders of
             magnitude</span
@@ -611,7 +495,7 @@
 
       <table>
         <caption>
-          <span class="tab">tab. 2</span
+          <span class="tab">tab. 1</span
           >Fitted scaling exponent of
           <code>min TTFT</code
           >, by model.
@@ -699,11 +583,11 @@
     </section>
 
     <!-- ================================================================ -->
-    <!-- 3 — Decode -->
+    <!-- 2 — Decode -->
     <!-- ================================================================ -->
-    <section id="s3">
+    <section id="s2">
       <h2>
-        <span class="num">03</span>Providers are doing decode very differently
+        <span class="num">02</span>Providers are doing decode very differently
       </h2>
 
       <p>
@@ -714,7 +598,7 @@
 
       <figure class="data-fig">
         <figcaption class="figcap-inline">
-          <span class="fig-num">fig. 3</span
+          <span class="fig-num">fig. 2</span
           ><span class="fig-title">decode ms per output token vs context</span
           ><span class="fig-meta"
             >linear y &middot; mean per cell &middot; all prompt shapes</span
@@ -729,7 +613,7 @@
 
       <table>
         <caption>
-          <span class="tab">tab. 3</span
+          <span class="tab">tab. 2</span
           >Decode ms/token at representative prompt sizes
         </caption>
         <thead>
@@ -805,6 +689,122 @@
             <td>34.6</td>
             <td class="dim">&mdash;</td>
             <td class="dim">&mdash;</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- 3 — Crossover -->
+    <!-- ================================================================ -->
+    <section id="s3">
+      <h2>
+        <span class="num">03</span>Fastest model at 1 KB context is the slowest
+        at 1 MB
+      </h2>
+
+      <p>
+        People quote first-token latency numbers as if a model has
+        <em>a</em> latency. It has a curve, and the curves cross. Choose wisely.
+      </p>
+
+      <figure class="data-fig">
+        <figcaption class="figcap-inline">
+          <span class="fig-num">fig. 3</span
+          ><span class="fig-title">TTFT floor vs prompt size</span
+          ><span class="fig-meta">log-log &middot; min per byte bucket</span>
+        </figcaption>
+        <svg
+          class="chart"
+          data-chart="p2-crossover"
+          aria-label="TTFT ranking crossover chart"
+        ></svg>
+      </figure>
+      <p>
+        <em>gpt-4.1-nano</em> wins on tiny/sub-second queries,
+        <em>gemini-3.1-flash-lite</em> wins on large queries >600KB (~150K
+        tokens).
+      </p>
+      <br />
+      <table>
+        <caption>
+          <span class="tab">tab. 3</span
+          >TTFT floor rankings at representative byte sizes (lower is faster).
+        </caption>
+        <thead>
+          <tr>
+            <th>model</th>
+            <th>tiny (&lt;1 KB)</th>
+            <th>64 KB</th>
+            <th>256 KB</th>
+            <th>601 KB</th>
+            <th>1 MB</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="swatch" style="color: var(--d2)"></span>gpt-4.1-nano
+            </td>
+            <td class="hi">#1 (176 ms)</td>
+            <td>#2 (359)</td>
+            <td>#2 (882)</td>
+            <td>#3 (1,730)</td>
+            <td>#5 (4,876)</td>
+          </tr>
+          <tr>
+            <td>
+              <span class="swatch" style="color: var(--d6)"></span>gpt-5.4-mini
+            </td>
+            <td>#2 (233)</td>
+            <td class="hi">#1 (349)</td>
+            <td class="hi">#1 (779)</td>
+            <td>#2 (1,376)</td>
+            <td>#4 (3,353)</td>
+          </tr>
+          <tr>
+            <td>
+              <span class="swatch" style="color: var(--d5)"></span
+              >gemini-2.5-flash
+            </td>
+            <td>#5 (289)</td>
+            <td>#3 (590)</td>
+            <td>#6 (2,290)</td>
+            <td>#5 (2,482)</td>
+            <td>#6 (4,650)</td>
+          </tr>
+          <tr>
+            <td>
+              <span class="swatch" style="color: var(--d8)"></span
+              >claude-haiku-4-5
+            </td>
+            <td>#7 (391)</td>
+            <td>#4 (608)</td>
+            <td>#4 (1,241)</td>
+            <td>#4 (2,229)</td>
+            <td class="dim">rejected</td>
+          </tr>
+          <tr>
+            <td>
+              <span class="swatch" style="color: var(--d3)"></span
+              >gemini-3.1-flash-lite
+            </td>
+            <td>#8 (461)</td>
+            <td>#5 (733)</td>
+            <td>#3 (1,181)</td>
+            <td class="hi">#1 (912)</td>
+            <td class="hi">#1 (1,732)</td>
+          </tr>
+          <tr>
+            <td>
+              <span class="swatch" style="color: var(--d4)"></span
+              >gemini-3-flash-preview
+            </td>
+            <td>#9 (492)</td>
+            <td>#6 (911)</td>
+            <td>#5 (1,268)</td>
+            <td>#6 (2,127)</td>
+            <td>#3 (2,861)</td>
           </tr>
         </tbody>
       </table>
