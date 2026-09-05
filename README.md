@@ -5,7 +5,7 @@ tokenization — from API latency alone. ~2,000 timed calls across nine small
 models and three providers.
 
 **[Read the writeup →](https://mmoustafa.com/blog/forensics/)** &nbsp;·&nbsp;
-**[Interactive viewer →](https://mmoustafa.com/blog/forensics/)**
+**[Interactive viewer →](https://mmoustafa.com/blog/forensics/viewer/)**
 
 ## Reading
 
