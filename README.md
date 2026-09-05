@@ -4,8 +4,8 @@ Probing how closed-weight model providers scale inference — prefill, decode, a
 tokenization — from API latency alone. ~2,000 timed calls across nine small
 models and three providers.
 
-**[Read the writeup →](https://blog.0xmmo.co/forensics/post.html)** &nbsp;·&nbsp;
-**[Interactive viewer →](https://blog.0xmmo.co/forensics/)**
+**[Read the writeup →](https://mmoustafa.com/blog/forensics/)** &nbsp;·&nbsp;
+**[Interactive viewer →](https://mmoustafa.com/blog/forensics/)**
 
 ## Reading
 
